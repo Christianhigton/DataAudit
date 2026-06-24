@@ -1,0 +1,65 @@
+---
+name: dataAudit
+title: Data Audit and Codebook
+menuGroup: DataAudit
+menuTitle: Data Audit and Codebook
+version: '1.0.0'
+jas: '1.2'
+description:
+    main: >
+        Produces a teaching-friendly data audit, codebook, missing-data report,
+        data-quality flags, descriptives, and optional assumption screening.
+options:
+    - { name: data, type: Data }
+
+    - name: vars
+      title: Variables to include
+      type: Variables
+      default: []
+
+    - name: outcome
+      title: Outcome variable
+      type: Variable
+      default: null
+
+    - name: predictors
+      title: Predictor variables
+      type: Variables
+      default: []
+
+    - name: group
+      title: Grouping variable
+      type: Variable
+      default: null
+
+    - name: caseID
+      title: Case ID variable
+      type: Variable
+      default: null
+
+    - { name: includeOverview, title: Include dataset overview, type: Bool, default: true }
+    - { name: includeDictionary, title: Include variable dictionary/codebook, type: Bool, default: true }
+    - { name: includeMissing, title: Include missing data report, type: Bool, default: true }
+    - { name: includeQuality, title: Include data-quality flags, type: Bool, default: true }
+    - { name: includeDescriptives, title: Include descriptives for continuous variables, type: Bool, default: false }
+    - { name: includeFrequencies, title: Include frequencies for categorical variables, type: Bool, default: false }
+    - { name: includeAssumptions, title: Include assumption checks, type: Bool, default: false }
+    - { name: includeSummary, title: Include plain-English summary, type: Bool, default: true }
+
+    - { name: normalityChecks, title: Normality checks, type: Bool, default: true }
+    - { name: outlierChecks, title: Outlier checks, type: Bool, default: true }
+    - { name: homogeneityChecks, title: Homogeneity of variance, type: Bool, default: false }
+    - { name: linearityChecks, title: Linearity checks, type: Bool, default: false }
+    - { name: multicollinearityChecks, title: Multicollinearity checks, type: Bool, default: false }
+
+    - { name: highMissing, title: High missingness threshold (%), type: Number, min: 0, max: 100, default: 20 }
+    - { name: moderateMissing, title: Moderate missingness threshold (%), type: Number, min: 0, max: 100, default: 5 }
+    - { name: smallCategoryN, title: Small category threshold (n <), type: Integer, min: 1, default: 5 }
+    - { name: zThreshold, title: Outlier z-score threshold, type: Number, min: 0.1, default: 3.29 }
+    - { name: iqrMultiplier, title: IQR multiplier, type: Number, min: 0.1, default: 1.5 }
+    - { name: vifWarning, title: VIF warning threshold, type: Number, min: 1, default: 5 }
+    - { name: vifSerious, title: VIF serious threshold, type: Number, min: 1, default: 10 }
+    - { name: skewThreshold, title: Skewness warning threshold, type: Number, min: 0, default: 1 }
+    - { name: kurtosisThreshold, title: Kurtosis warning threshold, type: Number, min: 0, default: 1 }
+    - { name: maxCaseRows, title: Maximum missing-case rows to show, type: Integer, min: 1, default: 50 }
+...

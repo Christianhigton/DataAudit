@@ -1,0 +1,75 @@
+---
+name: dataAudit
+title: Data Audit and Codebook
+jus: '2.0'
+stage: 0
+compilerMode: tame
+children:
+  - type: VariableSupplier
+    stretchFactor: 1
+    persistentItems: false
+    children:
+      - type: TargetLayoutBox
+        label: Variables
+        children:
+          - { type: VariablesListBox, name: vars, isTarget: true }
+      - type: TargetLayoutBox
+        label: Outcome
+        children:
+          - { type: VariablesListBox, name: outcome, maxItemCount: 1, isTarget: true }
+      - type: TargetLayoutBox
+        label: Predictors
+        children:
+          - { type: VariablesListBox, name: predictors, isTarget: true }
+      - type: TargetLayoutBox
+        label: Grouping Variable
+        children:
+          - { type: VariablesListBox, name: group, maxItemCount: 1, isTarget: true }
+      - type: TargetLayoutBox
+        label: Case ID
+        children:
+          - { type: VariablesListBox, name: caseID, maxItemCount: 1, isTarget: true }
+
+  - type: CollapseBox
+    label: Report Sections
+    collapsed: false
+    children:
+      - { type: CheckBox, name: includeOverview }
+      - { type: CheckBox, name: includeDictionary }
+      - { type: CheckBox, name: includeMissing }
+      - { type: CheckBox, name: includeQuality }
+      - { type: CheckBox, name: includeSummary }
+
+  - type: CollapseBox
+    label: Output Options
+    collapsed: true
+    children:
+      - { type: CheckBox, name: includeDescriptives }
+      - { type: CheckBox, name: includeFrequencies }
+      - { type: TextBox, name: maxCaseRows, format: number }
+
+  - type: CollapseBox
+    label: Assumption Checks
+    collapsed: true
+    children:
+      - { type: CheckBox, name: includeAssumptions }
+      - { type: CheckBox, name: normalityChecks }
+      - { type: CheckBox, name: outlierChecks }
+      - { type: CheckBox, name: homogeneityChecks }
+      - { type: CheckBox, name: linearityChecks }
+      - { type: CheckBox, name: multicollinearityChecks }
+
+  - type: CollapseBox
+    label: Thresholds
+    collapsed: true
+    children:
+      - { type: TextBox, name: highMissing, format: number }
+      - { type: TextBox, name: moderateMissing, format: number }
+      - { type: TextBox, name: smallCategoryN, format: number }
+      - { type: TextBox, name: zThreshold, format: number }
+      - { type: TextBox, name: iqrMultiplier, format: number }
+      - { type: TextBox, name: vifWarning, format: number }
+      - { type: TextBox, name: vifSerious, format: number }
+      - { type: TextBox, name: skewThreshold, format: number }
+      - { type: TextBox, name: kurtosisThreshold, format: number }
+...

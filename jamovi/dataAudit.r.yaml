@@ -1,0 +1,221 @@
+---
+name: dataAudit
+title: Data Audit and Codebook
+jrs: '1.1'
+items:
+  - name: summary
+    title: Plain-English Summary
+    type: Html
+    visible: (includeSummary)
+
+  - name: overview
+    title: Dataset Overview
+    type: Table
+    visible: (includeOverview)
+    clearWith:
+      - vars
+      - moderateMissing
+      - highMissing
+    columns:
+      - { name: metric, title: Metric, type: text }
+      - { name: value, title: Value, type: text }
+
+  - name: dictionary
+    title: Variable Dictionary / Codebook
+    type: Table
+    visible: (includeDictionary)
+    clearWith:
+      - vars
+      - moderateMissing
+      - highMissing
+    columns:
+      - { name: variable, title: Variable name, type: text }
+      - { name: label, title: Variable label, type: text }
+      - { name: jtype, title: jamovi variable type, type: text }
+      - { name: measure, title: jamovi measurement level, type: text }
+      - { name: inferred, title: Inferred variable type, type: text }
+      - { name: valid, title: Valid cases, type: integer }
+      - { name: missing, title: Missing, type: integer }
+      - { name: missingPct, title: Missing %, type: number }
+      - { name: unique, title: Unique valid values, type: integer }
+      - { name: min, title: Minimum, type: number }
+      - { name: max, title: Maximum, type: number }
+      - { name: examples, title: Example values/categories, type: text }
+      - { name: flag, title: Flag/warning, type: text }
+
+  - name: missingByVariable
+    title: Missing Data by Variable
+    type: Table
+    visible: (includeMissing)
+    clearWith:
+      - vars
+      - moderateMissing
+      - highMissing
+    columns:
+      - { name: variable, title: Variable, type: text }
+      - { name: valid, title: Valid n, type: integer }
+      - { name: missing, title: Missing n, type: integer }
+      - { name: missingPct, title: Missing %, type: number }
+      - { name: flag, title: Missingness flag, type: text }
+      - { name: recommendation, title: Recommendation, type: text }
+
+  - name: missingByCase
+    title: Cases with Missing Data
+    type: Table
+    visible: (includeMissing)
+    clearWith:
+      - vars
+      - caseID
+      - maxCaseRows
+    columns:
+      - { name: case, title: Row number or case ID, type: text }
+      - { name: missing, title: Number of missing variables, type: integer }
+      - { name: missingPct, title: Percentage missing, type: number }
+      - { name: flag, title: Flag, type: text }
+
+  - name: missingText
+    title: Missing Data Interpretation
+    type: Html
+    visible: (includeMissing)
+
+  - name: quality
+    title: Data-Quality Flags
+    type: Table
+    visible: (includeQuality)
+    clearWith:
+      - vars
+      - highMissing
+      - smallCategoryN
+    columns:
+      - { name: variable, title: Variable, type: text }
+      - { name: issue, title: Issue type, type: text }
+      - { name: details, title: Details, type: text }
+      - { name: severity, title: Severity, type: text }
+      - { name: action, title: Suggested action, type: text }
+
+  - name: descriptives
+    title: Descriptives for Continuous and Integer Variables
+    type: Table
+    visible: (includeDescriptives)
+    clearWith:
+      - vars
+    columns:
+      - { name: variable, title: Variable, type: text }
+      - { name: n, title: n, type: integer }
+      - { name: missing, title: Missing n, type: integer }
+      - { name: mean, title: Mean, type: number }
+      - { name: sd, title: SD, type: number }
+      - { name: median, title: Median, type: number }
+      - { name: min, title: Minimum, type: number }
+      - { name: max, title: Maximum, type: number }
+      - { name: skewness, title: Skewness, type: number }
+      - { name: kurtosis, title: Kurtosis, type: number }
+
+  - name: frequencies
+    title: Frequencies for Categorical Variables
+    type: Table
+    visible: (includeFrequencies)
+    clearWith:
+      - vars
+    columns:
+      - { name: variable, title: Variable, type: text }
+      - { name: category, title: Category, type: text }
+      - { name: n, title: n, type: integer }
+      - { name: validPct, title: Valid %, type: number }
+      - { name: totalPct, title: Total %, type: number }
+
+  - name: normality
+    title: Normality Screening
+    type: Table
+    visible: (includeAssumptions && normalityChecks)
+    clearWith:
+      - vars
+      - skewThreshold
+      - kurtosisThreshold
+    columns:
+      - { name: variable, title: Variable, type: text }
+      - { name: n, title: n, type: integer }
+      - { name: mean, title: Mean, type: number }
+      - { name: sd, title: SD, type: number }
+      - { name: median, title: Median, type: number }
+      - { name: skewness, title: Skewness, type: number }
+      - { name: kurtosis, title: Kurtosis, type: number }
+      - { name: w, title: Shapiro-Wilk W, type: number }
+      - name: p
+        title: Shapiro-Wilk p
+        type: number
+        format: zto,pvalue
+      - { name: flag, title: Normality flag, type: text }
+
+  - name: normalityNote
+    title: Normality Note
+    type: Html
+    visible: (includeAssumptions && normalityChecks)
+
+  - name: outliers
+    title: Outlier Screening
+    type: Table
+    visible: (includeAssumptions && outlierChecks)
+    clearWith:
+      - vars
+      - zThreshold
+      - iqrMultiplier
+      - caseID
+    columns:
+      - { name: variable, title: Variable, type: text }
+      - { name: zOutliers, title: z-score outliers, type: integer }
+      - { name: iqrOutliers, title: IQR outliers, type: integer }
+      - { name: low, title: Most extreme low value, type: number }
+      - { name: high, title: Most extreme high value, type: number }
+      - { name: cases, title: Potential outlier case IDs, type: text }
+      - { name: flag, title: Flag, type: text }
+
+  - name: homogeneity
+    title: Homogeneity of Variance
+    type: Table
+    visible: (includeAssumptions && homogeneityChecks)
+    clearWith:
+      - vars
+      - group
+    columns:
+      - { name: outcome, title: Outcome variable, type: text }
+      - { name: group, title: Grouping variable, type: text }
+      - { name: statistic, title: Levene statistic, type: number }
+      - { name: df, title: df, type: text }
+      - name: p
+        title: p
+        type: number
+        format: zto,pvalue
+      - { name: groupSDs, title: Group standard deviations, type: text }
+      - { name: varRatio, title: Variance ratio, type: number }
+      - { name: flag, title: Flag, type: text }
+
+  - name: linearity
+    title: Linearity Screening
+    type: Table
+    visible: (includeAssumptions && linearityChecks)
+    clearWith:
+      - outcome
+      - predictors
+    columns:
+      - { name: outcome, title: Outcome, type: text }
+      - { name: predictor, title: Predictor, type: text }
+      - { name: pearson, title: Pearson correlation, type: number }
+      - { name: spearman, title: Spearman correlation, type: number }
+      - { name: n, title: Pairwise n, type: integer }
+      - { name: flag, title: Flag, type: text }
+
+  - name: vif
+    title: Multicollinearity Screening
+    type: Table
+    visible: (includeAssumptions && multicollinearityChecks)
+    clearWith:
+      - predictors
+      - vifWarning
+      - vifSerious
+    columns:
+      - { name: predictor, title: Predictor, type: text }
+      - { name: vif, title: VIF, type: number }
+      - { name: tolerance, title: Tolerance, type: number }
+      - { name: flag, title: Flag, type: text }
+...

@@ -1,0 +1,28 @@
+---
+title: DataAudit
+name: DataAudit
+version: 0.1.0
+jms: '1.0'
+authors:
+  - DataAudit contributors
+maintainer: DataAudit contributors <maintainer@example.com>
+date: '2026-06-24'
+type: R
+description: >
+  Teaching-friendly data audit and codebook for jamovi datasets, including type
+  inference, missing-data summaries, data-quality flags, descriptives, and
+  optional assumption screening.
+analyses:
+  - title: Data Audit and Codebook
+    name: dataAudit
+    ns: DataAudit
+    menuGroup: DataAudit
+    menuTitle: Data Audit and Codebook
+    description: >
+      Produces a teaching-friendly data audit, codebook, missing-data report,
+      data-quality flags, descriptives, and optional assumption screening.
+    category: analyses
+usesNative: true
+minApp: 1.0.8
+
+...
