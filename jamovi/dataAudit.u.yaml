@@ -46,7 +46,10 @@ children:
     children:
       - { type: CheckBox, name: includeDescriptives }
       - { type: CheckBox, name: includeFrequencies }
+      - { type: CheckBox, name: includeGraphs }
       - { type: TextBox, name: maxCaseRows, format: number }
+      - { type: TextBox, name: graphMaxVars, format: number }
+      - { type: TextBox, name: graphTopCategories, format: number }
 
   - type: CollapseBox
     label: Assumption Checks

@@ -43,6 +43,7 @@ options:
     - { name: includeQuality, title: Include data-quality flags, type: Bool, default: true }
     - { name: includeDescriptives, title: Include descriptives for continuous variables, type: Bool, default: false }
     - { name: includeFrequencies, title: Include frequencies for categorical variables, type: Bool, default: false }
+    - { name: includeGraphs, title: Include graphs, type: Bool, default: false }
     - { name: includeAssumptions, title: Include assumption checks, type: Bool, default: false }
     - { name: includeSummary, title: Include plain-English summary, type: Bool, default: true }
 
@@ -62,4 +63,6 @@ options:
     - { name: skewThreshold, title: Skewness warning threshold, type: Number, min: 0, default: 1 }
     - { name: kurtosisThreshold, title: Kurtosis warning threshold, type: Number, min: 0, default: 1 }
     - { name: maxCaseRows, title: Maximum missing-case rows to show, type: Integer, min: 1, default: 50 }
+    - { name: graphMaxVars, title: Maximum variables per graph panel, type: Integer, min: 1, max: 24, default: 9 }
+    - { name: graphTopCategories, title: Maximum categories per categorical graph, type: Integer, min: 2, max: 30, default: 12 }
 ...

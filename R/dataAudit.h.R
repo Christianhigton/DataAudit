@@ -17,6 +17,7 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
             includeQuality = TRUE,
             includeDescriptives = FALSE,
             includeFrequencies = FALSE,
+            includeGraphs = FALSE,
             includeAssumptions = FALSE,
             includeSummary = TRUE,
             normalityChecks = TRUE,
@@ -33,7 +34,9 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
             vifSerious = 10,
             skewThreshold = 1,
             kurtosisThreshold = 1,
-            maxCaseRows = 50, ...) {
+            maxCaseRows = 50,
+            graphMaxVars = 9,
+            graphTopCategories = 12, ...) {
 
             super$initialize(
                 package="DataAudit",
@@ -84,6 +87,10 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
             private$..includeFrequencies <- jmvcore::OptionBool$new(
                 "includeFrequencies",
                 includeFrequencies,
+                default=FALSE)
+            private$..includeGraphs <- jmvcore::OptionBool$new(
+                "includeGraphs",
+                includeGraphs,
                 default=FALSE)
             private$..includeAssumptions <- jmvcore::OptionBool$new(
                 "includeAssumptions",
@@ -165,6 +172,18 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                 maxCaseRows,
                 min=1,
                 default=50)
+            private$..graphMaxVars <- jmvcore::OptionInteger$new(
+                "graphMaxVars",
+                graphMaxVars,
+                min=1,
+                max=24,
+                default=9)
+            private$..graphTopCategories <- jmvcore::OptionInteger$new(
+                "graphTopCategories",
+                graphTopCategories,
+                min=2,
+                max=30,
+                default=12)
 
             self$.addOption(private$..vars)
             self$.addOption(private$..outcome)
@@ -177,6 +196,7 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
             self$.addOption(private$..includeQuality)
             self$.addOption(private$..includeDescriptives)
             self$.addOption(private$..includeFrequencies)
+            self$.addOption(private$..includeGraphs)
             self$.addOption(private$..includeAssumptions)
             self$.addOption(private$..includeSummary)
             self$.addOption(private$..normalityChecks)
@@ -194,6 +214,8 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
             self$.addOption(private$..skewThreshold)
             self$.addOption(private$..kurtosisThreshold)
             self$.addOption(private$..maxCaseRows)
+            self$.addOption(private$..graphMaxVars)
+            self$.addOption(private$..graphTopCategories)
         }),
     active = list(
         vars = function() private$..vars$value,
@@ -207,6 +229,7 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
         includeQuality = function() private$..includeQuality$value,
         includeDescriptives = function() private$..includeDescriptives$value,
         includeFrequencies = function() private$..includeFrequencies$value,
+        includeGraphs = function() private$..includeGraphs$value,
         includeAssumptions = function() private$..includeAssumptions$value,
         includeSummary = function() private$..includeSummary$value,
         normalityChecks = function() private$..normalityChecks$value,
@@ -223,7 +246,9 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
         vifSerious = function() private$..vifSerious$value,
         skewThreshold = function() private$..skewThreshold$value,
         kurtosisThreshold = function() private$..kurtosisThreshold$value,
-        maxCaseRows = function() private$..maxCaseRows$value),
+        maxCaseRows = function() private$..maxCaseRows$value,
+        graphMaxVars = function() private$..graphMaxVars$value,
+        graphTopCategories = function() private$..graphTopCategories$value),
     private = list(
         ..vars = NA,
         ..outcome = NA,
@@ -236,6 +261,7 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
         ..includeQuality = NA,
         ..includeDescriptives = NA,
         ..includeFrequencies = NA,
+        ..includeGraphs = NA,
         ..includeAssumptions = NA,
         ..includeSummary = NA,
         ..normalityChecks = NA,
@@ -252,7 +278,9 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
         ..vifSerious = NA,
         ..skewThreshold = NA,
         ..kurtosisThreshold = NA,
-        ..maxCaseRows = NA)
+        ..maxCaseRows = NA,
+        ..graphMaxVars = NA,
+        ..graphTopCategories = NA)
 )
 
 dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
@@ -268,6 +296,11 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
         quality = function() private$.items[["quality"]],
         descriptives = function() private$.items[["descriptives"]],
         frequencies = function() private$.items[["frequencies"]],
+        missingPlot = function() private$.items[["missingPlot"]],
+        numericPlot = function() private$.items[["numericPlot"]],
+        boxPlot = function() private$.items[["boxPlot"]],
+        categoricalPlot = function() private$.items[["categoricalPlot"]],
+        correlationPlot = function() private$.items[["correlationPlot"]],
         normality = function() private$.items[["normality"]],
         normalityNote = function() private$.items[["normalityNote"]],
         outliers = function() private$.items[["outliers"]],
@@ -537,6 +570,62 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                         `name`="totalPct", 
                         `title`="Total %", 
                         `type`="number"))))
+            self$add(jmvcore::Image$new(
+                options=options,
+                name="missingPlot",
+                title="Missing Data Plot",
+                visible="(includeGraphs)",
+                clearWith=list(
+                    "vars",
+                    "graphMaxVars"),
+                width=650,
+                height=420,
+                renderFun=".missingPlot"))
+            self$add(jmvcore::Image$new(
+                options=options,
+                name="numericPlot",
+                title="Numeric Histograms",
+                visible="(includeGraphs)",
+                clearWith=list(
+                    "vars",
+                    "graphMaxVars"),
+                width=720,
+                height=560,
+                renderFun=".numericPlot"))
+            self$add(jmvcore::Image$new(
+                options=options,
+                name="boxPlot",
+                title="Numeric Boxplots",
+                visible="(includeGraphs)",
+                clearWith=list(
+                    "vars",
+                    "graphMaxVars"),
+                width=720,
+                height=560,
+                renderFun=".boxPlot"))
+            self$add(jmvcore::Image$new(
+                options=options,
+                name="categoricalPlot",
+                title="Categorical Distributions",
+                visible="(includeGraphs)",
+                clearWith=list(
+                    "vars",
+                    "graphMaxVars",
+                    "graphTopCategories"),
+                width=720,
+                height=560,
+                renderFun=".categoricalPlot"))
+            self$add(jmvcore::Image$new(
+                options=options,
+                name="correlationPlot",
+                title="Correlation Heatmap",
+                visible="(includeGraphs)",
+                clearWith=list(
+                    "vars",
+                    "graphMaxVars"),
+                width=650,
+                height=560,
+                renderFun=".correlationPlot"))
             self$add(jmvcore::Table$new(
                 options=options,
                 name="normality",
@@ -772,6 +861,7 @@ dataAuditBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 #' @param includeQuality .
 #' @param includeDescriptives .
 #' @param includeFrequencies .
+#' @param includeGraphs .
 #' @param includeAssumptions .
 #' @param includeSummary .
 #' @param normalityChecks .
@@ -789,6 +879,8 @@ dataAuditBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 #' @param skewThreshold .
 #' @param kurtosisThreshold .
 #' @param maxCaseRows .
+#' @param graphMaxVars .
+#' @param graphTopCategories .
 #' @return A results object containing:
 #' \tabular{llllll}{
 #'   \code{results$summary} \tab \tab \tab \tab \tab a html \cr
@@ -800,6 +892,11 @@ dataAuditBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 #'   \code{results$quality} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$descriptives} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$frequencies} \tab \tab \tab \tab \tab a table \cr
+#'   \code{results$missingPlot} \tab \tab \tab \tab \tab an image \cr
+#'   \code{results$numericPlot} \tab \tab \tab \tab \tab an image \cr
+#'   \code{results$boxPlot} \tab \tab \tab \tab \tab an image \cr
+#'   \code{results$categoricalPlot} \tab \tab \tab \tab \tab an image \cr
+#'   \code{results$correlationPlot} \tab \tab \tab \tab \tab an image \cr
 #'   \code{results$normality} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$normalityNote} \tab \tab \tab \tab \tab a html \cr
 #'   \code{results$outliers} \tab \tab \tab \tab \tab a table \cr
@@ -828,6 +925,7 @@ dataAudit <- function(
     includeQuality = TRUE,
     includeDescriptives = FALSE,
     includeFrequencies = FALSE,
+    includeGraphs = FALSE,
     includeAssumptions = FALSE,
     includeSummary = TRUE,
     normalityChecks = TRUE,
@@ -844,7 +942,9 @@ dataAudit <- function(
     vifSerious = 10,
     skewThreshold = 1,
     kurtosisThreshold = 1,
-    maxCaseRows = 50) {
+    maxCaseRows = 50,
+    graphMaxVars = 9,
+    graphTopCategories = 12) {
 
     if ( ! requireNamespace("jmvcore", quietly=TRUE))
         stop("dataAudit requires jmvcore to be installed (restart may be required)")
@@ -876,6 +976,7 @@ dataAudit <- function(
         includeQuality = includeQuality,
         includeDescriptives = includeDescriptives,
         includeFrequencies = includeFrequencies,
+        includeGraphs = includeGraphs,
         includeAssumptions = includeAssumptions,
         includeSummary = includeSummary,
         normalityChecks = normalityChecks,
@@ -892,7 +993,9 @@ dataAudit <- function(
         vifSerious = vifSerious,
         skewThreshold = skewThreshold,
         kurtosisThreshold = kurtosisThreshold,
-        maxCaseRows = maxCaseRows)
+        maxCaseRows = maxCaseRows,
+        graphMaxVars = graphMaxVars,
+        graphTopCategories = graphTopCategories)
 
     analysis <- dataAuditClass$new(
         options = options,

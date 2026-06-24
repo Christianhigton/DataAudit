@@ -43,6 +43,15 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
             if (opts$includeFrequencies)
                 .da_add_rows(self$results$frequencies, .da_frequencies(data, vars, audit$dictionary))
 
+            if (opts$includeGraphs) {
+                plot_state <- .da_plot_state(data, vars, audit$dictionary, opts)
+                self$results$missingPlot$setState(plot_state)
+                self$results$numericPlot$setState(plot_state)
+                self$results$boxPlot$setState(plot_state)
+                self$results$categoricalPlot$setState(plot_state)
+                self$results$correlationPlot$setState(plot_state)
+            }
+
             if (opts$includeAssumptions) {
                 if (opts$normalityChecks) {
                     .da_add_rows(self$results$normality, .da_normality(data, vars, audit$dictionary, opts))
@@ -59,6 +68,21 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
                 if (opts$multicollinearityChecks)
                     .da_add_rows(self$results$vif, .da_vif(data, opts))
             }
+        },
+        .missingPlot = function(image, ...) {
+            .da_render_missing_plot(image$state)
+        },
+        .numericPlot = function(image, ...) {
+            .da_render_numeric_plot(image$state)
+        },
+        .boxPlot = function(image, ...) {
+            .da_render_box_plot(image$state)
+        },
+        .categoricalPlot = function(image, ...) {
+            .da_render_categorical_plot(image$state)
+        },
+        .correlationPlot = function(image, ...) {
+            .da_render_correlation_plot(image$state)
         }
     )
 )
@@ -686,4 +710,196 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
     if (is.na(s) || s == 0)
         return(NA_real_)
     mean((x - mean(x))^4) / s^4 - 3
+}
+
+.da_plot_state <- function(data, vars, dictionary, opts) {
+    list(
+        data = data,
+        vars = vars,
+        dictionary = dictionary,
+        graphMaxVars = opts$graphMaxVars %||% 9L,
+        graphTopCategories = opts$graphTopCategories %||% 12L
+    )
+}
+
+.da_plot_message <- function(message) {
+    graphics::plot.new()
+    graphics::text(0.5, 0.5, message, cex = 1.05)
+    invisible(TRUE)
+}
+
+.da_plot_numeric_vars <- function(state) {
+    dictionary <- state$dictionary
+    vars <- dictionary$variable[dictionary$inferred %in% c("Continuous numeric", "Integer/count", "Possible scale item")]
+    vars <- intersect(state$vars, vars)
+    vars[vapply(vars, function(v) length(.da_plot_numeric_values(state$data[[v]])) > 0L, logical(1))]
+}
+
+.da_plot_categorical_vars <- function(state) {
+    dictionary <- state$dictionary
+    vars <- dictionary$variable[dictionary$inferred %in% c("Dichotomous/binary", "Ordinal", "Nominal categorical", "Possible scale item")]
+    vars <- intersect(state$vars, vars)
+    vars[vapply(vars, function(v) length(stats::na.omit(state$data[[v]])) > 0L, logical(1))]
+}
+
+.da_plot_numeric_values <- function(x) {
+    if (inherits(x, c("Date", "POSIXct", "POSIXt")))
+        return(numeric())
+    out <- suppressWarnings(as.numeric(as.character(x)))
+    out <- out[is.finite(out)]
+    out
+}
+
+.da_panel_layout <- function(n) {
+    if (n <= 1L)
+        return(c(1L, 1L))
+    cols <- ceiling(sqrt(n))
+    rows <- ceiling(n / cols)
+    c(rows, cols)
+}
+
+.da_render_missing_plot <- function(state) {
+    if (is.null(state))
+        return(.da_plot_message("No plot state is available."))
+    vars <- state$vars
+    if (length(vars) == 0L)
+        return(.da_plot_message("No variables are available for the missing-data plot."))
+
+    missing_pct <- vapply(vars, function(v) .da_pct(sum(is.na(state$data[[v]])), length(state$data[[v]])), numeric(1))
+    ord <- order(missing_pct, decreasing = TRUE)
+    max_vars <- min(length(ord), state$graphMaxVars)
+    ord <- ord[seq_len(max_vars)]
+    values <- missing_pct[ord]
+    labels <- vars[ord]
+
+    old <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(old), add = TRUE)
+    graphics::par(mar = c(4, 9, 3, 2))
+    graphics::barplot(
+        rev(values),
+        horiz = TRUE,
+        names.arg = rev(labels),
+        las = 1,
+        xlab = "Missing data (%)",
+        col = "#6BAED6",
+        border = "#2B6C9E",
+        main = "Variables with the most missing data",
+        xlim = c(0, max(100, values, na.rm = TRUE))
+    )
+    graphics::abline(v = c(5, 20), lty = 2, col = c("#E6A23C", "#C0392B"))
+    graphics::legend("bottomright", legend = c("5% moderate", "20% high"), lty = 2, col = c("#E6A23C", "#C0392B"), bty = "n", cex = 0.8)
+    invisible(TRUE)
+}
+
+.da_render_numeric_plot <- function(state) {
+    if (is.null(state))
+        return(.da_plot_message("No plot state is available."))
+    vars <- utils::head(.da_plot_numeric_vars(state), state$graphMaxVars)
+    if (length(vars) == 0L)
+        return(.da_plot_message("No numeric or scale-like variables are available for histograms."))
+
+    layout <- .da_panel_layout(length(vars))
+    old <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(old), add = TRUE)
+    graphics::par(mfrow = layout, mar = c(4, 4, 3, 1))
+
+    for (v in vars) {
+        x <- .da_plot_numeric_values(state$data[[v]])
+        if (length(unique(x)) < 2L) {
+            graphics::plot.new()
+            graphics::title(main = v)
+            graphics::text(0.5, 0.5, "Not enough variation")
+        } else {
+            graphics::hist(x, main = v, xlab = "", col = "#9ECAE1", border = "white")
+            graphics::rug(x, col = "#2B6C9E")
+        }
+    }
+    invisible(TRUE)
+}
+
+.da_render_box_plot <- function(state) {
+    if (is.null(state))
+        return(.da_plot_message("No plot state is available."))
+    vars <- utils::head(.da_plot_numeric_vars(state), state$graphMaxVars)
+    if (length(vars) == 0L)
+        return(.da_plot_message("No numeric or scale-like variables are available for boxplots."))
+
+    layout <- .da_panel_layout(length(vars))
+    old <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(old), add = TRUE)
+    graphics::par(mfrow = layout, mar = c(4, 4, 3, 1))
+
+    for (v in vars) {
+        x <- .da_plot_numeric_values(state$data[[v]])
+        if (length(unique(x)) < 2L) {
+            graphics::plot.new()
+            graphics::title(main = v)
+            graphics::text(0.5, 0.5, "Not enough variation")
+        } else {
+            graphics::boxplot(x, horizontal = TRUE, main = v, xlab = "", col = "#A1D99B", border = "#2E7D32")
+            graphics::stripchart(x, method = "jitter", add = TRUE, pch = 16, col = grDevices::adjustcolor("#1B5E20", alpha.f = 0.35))
+        }
+    }
+    invisible(TRUE)
+}
+
+.da_render_categorical_plot <- function(state) {
+    if (is.null(state))
+        return(.da_plot_message("No plot state is available."))
+    vars <- utils::head(.da_plot_categorical_vars(state), state$graphMaxVars)
+    if (length(vars) == 0L)
+        return(.da_plot_message("No categorical, binary, ordinal, or scale-like variables are available for bar charts."))
+
+    layout <- .da_panel_layout(length(vars))
+    old <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(old), add = TRUE)
+    graphics::par(mfrow = layout, mar = c(5, 4, 3, 1))
+
+    for (v in vars) {
+        tab <- sort(table(state$data[[v]], useNA = "no"), decreasing = TRUE)
+        tab <- utils::head(tab, state$graphTopCategories)
+        if (length(tab) == 0L) {
+            graphics::plot.new()
+            graphics::title(main = v)
+            graphics::text(0.5, 0.5, "No valid categories")
+        } else {
+            graphics::barplot(tab, main = v, ylab = "n", las = 2, col = "#FDD0A2", border = "#D94801", cex.names = 0.75)
+        }
+    }
+    invisible(TRUE)
+}
+
+.da_render_correlation_plot <- function(state) {
+    if (is.null(state))
+        return(.da_plot_message("No plot state is available."))
+    vars <- utils::head(.da_plot_numeric_vars(state), state$graphMaxVars)
+    if (length(vars) < 2L)
+        return(.da_plot_message("At least two numeric or scale-like variables are needed for a correlation heatmap."))
+
+    df <- as.data.frame(lapply(vars, function(v) .da_plot_numeric_values_with_na(state$data[[v]])))
+    names(df) <- vars
+    keep <- vapply(df, function(x) sum(is.finite(x)) >= 3L && stats::sd(x, na.rm = TRUE) > 0, logical(1))
+    df <- df[, keep, drop = FALSE]
+    if (ncol(df) < 2L)
+        return(.da_plot_message("At least two numeric variables with variation are needed for a correlation heatmap."))
+
+    mat <- suppressWarnings(stats::cor(df, use = "pairwise.complete.obs"))
+    n <- ncol(mat)
+
+    old <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(old), add = TRUE)
+    graphics::par(mar = c(8, 8, 4, 5))
+    cols <- grDevices::colorRampPalette(c("#2166AC", "#F7F7F7", "#B2182B"))(101)
+    graphics::image(seq_len(n), seq_len(n), mat[n:1, , drop = FALSE], col = cols, zlim = c(-1, 1), axes = FALSE, xlab = "", ylab = "", main = "Pairwise correlation heatmap")
+    graphics::axis(1, at = seq_len(n), labels = colnames(mat), las = 2, cex.axis = 0.75)
+    graphics::axis(2, at = seq_len(n), labels = rev(rownames(mat)), las = 2, cex.axis = 0.75)
+    graphics::box()
+    graphics::legend("right", inset = -0.16, legend = c("1", "0", "-1"), fill = c("#B2182B", "#F7F7F7", "#2166AC"), title = "r", xpd = TRUE, bty = "n")
+    invisible(TRUE)
+}
+
+.da_plot_numeric_values_with_na <- function(x) {
+    if (inherits(x, c("Date", "POSIXct", "POSIXt")))
+        return(rep(NA_real_, length(x)))
+    suppressWarnings(as.numeric(as.character(x)))
 }

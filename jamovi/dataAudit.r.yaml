@@ -124,6 +124,62 @@ items:
       - { name: validPct, title: Valid %, type: number }
       - { name: totalPct, title: Total %, type: number }
 
+  - name: missingPlot
+    title: Missing Data Plot
+    type: Image
+    visible: (includeGraphs)
+    clearWith:
+      - vars
+      - graphMaxVars
+    width: 650
+    height: 420
+    renderFun: .missingPlot
+
+  - name: numericPlot
+    title: Numeric Histograms
+    type: Image
+    visible: (includeGraphs)
+    clearWith:
+      - vars
+      - graphMaxVars
+    width: 720
+    height: 560
+    renderFun: .numericPlot
+
+  - name: boxPlot
+    title: Numeric Boxplots
+    type: Image
+    visible: (includeGraphs)
+    clearWith:
+      - vars
+      - graphMaxVars
+    width: 720
+    height: 560
+    renderFun: .boxPlot
+
+  - name: categoricalPlot
+    title: Categorical Distributions
+    type: Image
+    visible: (includeGraphs)
+    clearWith:
+      - vars
+      - graphMaxVars
+      - graphTopCategories
+    width: 720
+    height: 560
+    renderFun: .categoricalPlot
+
+  - name: correlationPlot
+    title: Correlation Heatmap
+    type: Image
+    visible: (includeGraphs)
+    clearWith:
+      - vars
+      - graphMaxVars
+    width: 650
+    height: 560
+    renderFun: .correlationPlot
+
   - name: normality
     title: Normality Screening
     type: Table

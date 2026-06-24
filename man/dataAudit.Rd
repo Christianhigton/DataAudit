@@ -19,6 +19,7 @@ dataAudit(
   includeQuality = TRUE,
   includeDescriptives = FALSE,
   includeFrequencies = FALSE,
+  includeGraphs = FALSE,
   includeAssumptions = FALSE,
   includeSummary = TRUE,
   normalityChecks = TRUE,
@@ -35,7 +36,9 @@ dataAudit(
   vifSerious = 10,
   skewThreshold = 1,
   kurtosisThreshold = 1,
-  maxCaseRows = 50
+  maxCaseRows = 50,
+  graphMaxVars = 9,
+  graphTopCategories = 12
 )
 }
 \arguments{
@@ -45,9 +48,9 @@ dataAudit(
 \item{predictors}{Optional predictor variables for selected assumption checks.}
 \item{group}{Optional grouping variable for Levene's test.}
 \item{caseID}{Optional case identifier for case-level missingness and outlier output.}
-\item{includeOverview, includeDictionary, includeMissing, includeQuality, includeDescriptives, includeFrequencies, includeAssumptions, includeSummary}{Logical switches controlling report sections.}
+\item{includeOverview, includeDictionary, includeMissing, includeQuality, includeDescriptives, includeFrequencies, includeGraphs, includeAssumptions, includeSummary}{Logical switches controlling report sections.}
 \item{normalityChecks, outlierChecks, homogeneityChecks, linearityChecks, multicollinearityChecks}{Logical switches controlling assumption-screening sections.}
-\item{highMissing, moderateMissing, smallCategoryN, zThreshold, iqrMultiplier, vifWarning, vifSerious, skewThreshold, kurtosisThreshold, maxCaseRows}{Editable screening thresholds and display limits.}
+\item{highMissing, moderateMissing, smallCategoryN, zThreshold, iqrMultiplier, vifWarning, vifSerious, skewThreshold, kurtosisThreshold, maxCaseRows, graphMaxVars, graphTopCategories}{Editable screening thresholds and display limits.}
 }
 \value{
 A jamovi results object containing overview, dictionary, missingness,
@@ -58,6 +61,8 @@ outputs depending on the selected options.
 Produces a teaching-friendly data audit and codebook for jamovi datasets.
 The analysis infers variable roles from data values, reports missingness,
 flags common data-quality issues, and optionally screens normality, outliers,
-homogeneity of variance, linearity, and multicollinearity.
+homogeneity of variance, linearity, and multicollinearity. Optional graphs
+include missingness bars, numeric histograms, numeric boxplots, categorical
+bar charts, and a numeric correlation heatmap.
 }
 \keyword{datasets}

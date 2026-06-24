@@ -1,7 +1,7 @@
 Package: DataAudit
 Type: Package
 Title: Data Audit and Codebook for jamovi
-Version: 0.1.0
+Version: 0.1.1
 Author: DataAudit contributors
 Maintainer: DataAudit contributors <maintainer@example.com>
 Description: Produces a teaching-friendly data audit and codebook for jamovi
