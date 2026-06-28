@@ -1,0 +1,13 @@
+refs:
+    dataaudit:
+        type: software
+        author: Higton, C.
+        year: 2025
+        title: 'DataAudit: Data audit and codebook for jamovi (Version 0.1.1)'
+        publisher: '[jamovi module]'
+    tabachnick_fidell:
+        type: book
+        author: Tabachnick, B. G., & Fidell, L. S.
+        year: 2019
+        title: Using Multivariate Statistics (7th ed.)
+        publisher: Pearson

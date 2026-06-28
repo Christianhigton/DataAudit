@@ -4,8 +4,8 @@ name: DataAudit
 version: 0.1.1
 jms: '1.0'
 authors:
-  - DataAudit contributors
-maintainer: DataAudit contributors <maintainer@example.com>
+  - Christian Higton
+maintainer: Christian Higton <maintainer@example.com>
 date: '2026-06-24'
 type: R
 description: >

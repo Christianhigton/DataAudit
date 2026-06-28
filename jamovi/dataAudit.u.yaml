@@ -39,6 +39,30 @@ children:
       - { type: CheckBox, name: includeMissing }
       - { type: CheckBox, name: includeQuality }
       - { type: CheckBox, name: includeSummary }
+      - { type: CheckBox, name: includeAuditScore }
+      - { type: CheckBox, name: includeChecklist }
+      - { type: CheckBox, name: includeExportCodebook }
+      - { type: CheckBox, name: includeDuplicateReview }
+
+  - type: CollapseBox
+    label: Notes and Screening Rules
+    collapsed: true
+    children:
+      - type: TextBox
+        name: screeningDesign
+        format: string
+        width: largest
+        stretchFactor: 1
+      - { type: CheckBox, name: includeRangeRules }
+      - type: TextBox
+        name: rangeRules
+        format: string
+        width: largest
+        stretchFactor: 1
+      - type: Label
+        label: "Separate rules with semicolons:  age: 18:99 ; gender: male|female|other ; score: 0:100"
+      - { type: CheckBox, name: includeSurveyChecks }
+      - { type: CheckBox, name: includeAttentionChecks }
 
   - type: CollapseBox
     label: Output Options
@@ -47,6 +71,9 @@ children:
       - { type: CheckBox, name: includeDescriptives }
       - { type: CheckBox, name: includeFrequencies }
       - { type: CheckBox, name: includeGraphs }
+      - { type: CheckBox, name: includeViolinPlots }
+      - { type: CheckBox, name: includeNormalCurveHistograms }
+      - { type: CheckBox, name: includeSurveyPlots }
       - { type: TextBox, name: maxCaseRows, format: number }
       - { type: TextBox, name: graphMaxVars, format: number }
       - { type: TextBox, name: graphTopCategories, format: number }

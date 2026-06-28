@@ -20,6 +20,18 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
             includeGraphs = FALSE,
             includeAssumptions = FALSE,
             includeSummary = TRUE,
+            includeAuditScore = TRUE,
+            includeChecklist = TRUE,
+            includeExportCodebook = TRUE,
+            includeRangeRules = FALSE,
+            includeDuplicateReview = TRUE,
+            includeSurveyChecks = FALSE,
+            includeAttentionChecks = FALSE,
+            includeViolinPlots = FALSE,
+            includeNormalCurveHistograms = FALSE,
+            includeSurveyPlots = FALSE,
+            rangeRules = "",
+            screeningDesign = "ungrouped",
             normalityChecks = TRUE,
             outlierChecks = TRUE,
             homogeneityChecks = FALSE,
@@ -33,7 +45,7 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
             vifWarning = 5,
             vifSerious = 10,
             skewThreshold = 1,
-            kurtosisThreshold = 1,
+            kurtosisThreshold = 2,
             maxCaseRows = 50,
             graphMaxVars = 9,
             graphTopCategories = 12, ...) {
@@ -100,6 +112,54 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                 "includeSummary",
                 includeSummary,
                 default=TRUE)
+            private$..includeAuditScore <- jmvcore::OptionBool$new(
+                "includeAuditScore",
+                includeAuditScore,
+                default=TRUE)
+            private$..includeChecklist <- jmvcore::OptionBool$new(
+                "includeChecklist",
+                includeChecklist,
+                default=TRUE)
+            private$..includeExportCodebook <- jmvcore::OptionBool$new(
+                "includeExportCodebook",
+                includeExportCodebook,
+                default=TRUE)
+            private$..includeRangeRules <- jmvcore::OptionBool$new(
+                "includeRangeRules",
+                includeRangeRules,
+                default=FALSE)
+            private$..includeDuplicateReview <- jmvcore::OptionBool$new(
+                "includeDuplicateReview",
+                includeDuplicateReview,
+                default=TRUE)
+            private$..includeSurveyChecks <- jmvcore::OptionBool$new(
+                "includeSurveyChecks",
+                includeSurveyChecks,
+                default=FALSE)
+            private$..includeAttentionChecks <- jmvcore::OptionBool$new(
+                "includeAttentionChecks",
+                includeAttentionChecks,
+                default=FALSE)
+            private$..includeViolinPlots <- jmvcore::OptionBool$new(
+                "includeViolinPlots",
+                includeViolinPlots,
+                default=FALSE)
+            private$..includeNormalCurveHistograms <- jmvcore::OptionBool$new(
+                "includeNormalCurveHistograms",
+                includeNormalCurveHistograms,
+                default=FALSE)
+            private$..includeSurveyPlots <- jmvcore::OptionBool$new(
+                "includeSurveyPlots",
+                includeSurveyPlots,
+                default=FALSE)
+            private$..rangeRules <- jmvcore::OptionString$new(
+                "rangeRules",
+                rangeRules,
+                default="")
+            private$..screeningDesign <- jmvcore::OptionString$new(
+                "screeningDesign",
+                screeningDesign,
+                default="ungrouped")
             private$..normalityChecks <- jmvcore::OptionBool$new(
                 "normalityChecks",
                 normalityChecks,
@@ -166,7 +226,7 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                 "kurtosisThreshold",
                 kurtosisThreshold,
                 min=0,
-                default=1)
+                default=2)
             private$..maxCaseRows <- jmvcore::OptionInteger$new(
                 "maxCaseRows",
                 maxCaseRows,
@@ -199,6 +259,18 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
             self$.addOption(private$..includeGraphs)
             self$.addOption(private$..includeAssumptions)
             self$.addOption(private$..includeSummary)
+            self$.addOption(private$..includeAuditScore)
+            self$.addOption(private$..includeChecklist)
+            self$.addOption(private$..includeExportCodebook)
+            self$.addOption(private$..includeRangeRules)
+            self$.addOption(private$..includeDuplicateReview)
+            self$.addOption(private$..includeSurveyChecks)
+            self$.addOption(private$..includeAttentionChecks)
+            self$.addOption(private$..includeViolinPlots)
+            self$.addOption(private$..includeNormalCurveHistograms)
+            self$.addOption(private$..includeSurveyPlots)
+            self$.addOption(private$..rangeRules)
+            self$.addOption(private$..screeningDesign)
             self$.addOption(private$..normalityChecks)
             self$.addOption(private$..outlierChecks)
             self$.addOption(private$..homogeneityChecks)
@@ -232,6 +304,18 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
         includeGraphs = function() private$..includeGraphs$value,
         includeAssumptions = function() private$..includeAssumptions$value,
         includeSummary = function() private$..includeSummary$value,
+        includeAuditScore = function() private$..includeAuditScore$value,
+        includeChecklist = function() private$..includeChecklist$value,
+        includeExportCodebook = function() private$..includeExportCodebook$value,
+        includeRangeRules = function() private$..includeRangeRules$value,
+        includeDuplicateReview = function() private$..includeDuplicateReview$value,
+        includeSurveyChecks = function() private$..includeSurveyChecks$value,
+        includeAttentionChecks = function() private$..includeAttentionChecks$value,
+        includeViolinPlots = function() private$..includeViolinPlots$value,
+        includeNormalCurveHistograms = function() private$..includeNormalCurveHistograms$value,
+        includeSurveyPlots = function() private$..includeSurveyPlots$value,
+        rangeRules = function() private$..rangeRules$value,
+        screeningDesign = function() private$..screeningDesign$value,
         normalityChecks = function() private$..normalityChecks$value,
         outlierChecks = function() private$..outlierChecks$value,
         homogeneityChecks = function() private$..homogeneityChecks$value,
@@ -264,6 +348,18 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
         ..includeGraphs = NA,
         ..includeAssumptions = NA,
         ..includeSummary = NA,
+        ..includeAuditScore = NA,
+        ..includeChecklist = NA,
+        ..includeExportCodebook = NA,
+        ..includeRangeRules = NA,
+        ..includeDuplicateReview = NA,
+        ..includeSurveyChecks = NA,
+        ..includeAttentionChecks = NA,
+        ..includeViolinPlots = NA,
+        ..includeNormalCurveHistograms = NA,
+        ..includeSurveyPlots = NA,
+        ..rangeRules = NA,
+        ..screeningDesign = NA,
         ..normalityChecks = NA,
         ..outlierChecks = NA,
         ..homogeneityChecks = NA,
@@ -287,19 +383,31 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
     "dataAuditResults",
     inherit = jmvcore::Group,
     active = list(
+        moduleRefs = function() private$.items[["moduleRefs"]],
         summary = function() private$.items[["summary"]],
+        auditScore = function() private$.items[["auditScore"]],
+        screeningChecklist = function() private$.items[["screeningChecklist"]],
         overview = function() private$.items[["overview"]],
         dictionary = function() private$.items[["dictionary"]],
+        exportCodebook = function() private$.items[["exportCodebook"]],
         missingByVariable = function() private$.items[["missingByVariable"]],
         missingByCase = function() private$.items[["missingByCase"]],
         missingText = function() private$.items[["missingText"]],
+        missingPatterns = function() private$.items[["missingPatterns"]],
         quality = function() private$.items[["quality"]],
+        rangeRuleFlags = function() private$.items[["rangeRuleFlags"]],
+        duplicateReview = function() private$.items[["duplicateReview"]],
+        surveyResponseFlags = function() private$.items[["surveyResponseFlags"]],
+        attentionCheckFlags = function() private$.items[["attentionCheckFlags"]],
+        metadataSuggestions = function() private$.items[["metadataSuggestions"]],
         descriptives = function() private$.items[["descriptives"]],
         frequencies = function() private$.items[["frequencies"]],
         missingPlot = function() private$.items[["missingPlot"]],
         numericPlot = function() private$.items[["numericPlot"]],
+        violinPlot = function() private$.items[["violinPlot"]],
         boxPlot = function() private$.items[["boxPlot"]],
         categoricalPlot = function() private$.items[["categoricalPlot"]],
+        surveyPlot = function() private$.items[["surveyPlot"]],
         correlationPlot = function() private$.items[["correlationPlot"]],
         normality = function() private$.items[["normality"]],
         normalityNote = function() private$.items[["normalityNote"]],
@@ -316,14 +424,81 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                 title="Data Audit and Codebook")
             self$add(jmvcore::Html$new(
                 options=options,
+                name="moduleRefs",
+                title="References"))
+            self$add(jmvcore::Html$new(
+                options=options,
                 name="summary",
                 title="Plain-English Summary",
-                visible="(includeSummary)"))
+                visible="(includeSummary)",
+                refs=list(
+                    "dataaudit",
+                    "tabachnick_fidell")))
+            self$add(jmvcore::Table$new(
+                options=options,
+                name="auditScore",
+                title="Traffic-Light Audit Score",
+                visible="(includeAuditScore)",
+                clearWith=list(
+                    "vars",
+                    "highMissing",
+                    "moderateMissing",
+                    "zThreshold",
+                    "iqrMultiplier",
+                    "includeAssumptions"),
+                columns=list(
+                    list(
+                        `name`="domain", 
+                        `title`="Domain", 
+                        `type`="text"),
+                    list(
+                        `name`="status", 
+                        `title`="Status", 
+                        `type`="text"),
+                    list(
+                        `name`="evidence", 
+                        `title`="Evidence", 
+                        `type`="text"),
+                    list(
+                        `name`="recommendedAction", 
+                        `title`="Recommended action", 
+                        `type`="text"))))
+            self$add(jmvcore::Table$new(
+                options=options,
+                name="screeningChecklist",
+                title="Data-Screening Checklist",
+                visible="(includeChecklist)",
+                clearWith=list(
+                    "vars",
+                    "screeningDesign",
+                    "includeAssumptions",
+                    "group",
+                    "predictors"),
+                columns=list(
+                    list(
+                        `name`="step", 
+                        `title`="Step", 
+                        `type`="text"),
+                    list(
+                        `name`="status", 
+                        `title`="Status", 
+                        `type`="text"),
+                    list(
+                        `name`="check", 
+                        `title`="What was checked", 
+                        `type`="text"),
+                    list(
+                        `name`="nextAction", 
+                        `title`="Next action", 
+                        `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
                 name="overview",
                 title="Dataset Overview",
                 visible="(includeOverview)",
+                refs=list(
+                    "dataaudit",
+                    "tabachnick_fidell"),
                 clearWith=list(
                     "vars",
                     "moderateMissing",
@@ -340,7 +515,7 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
             self$add(jmvcore::Table$new(
                 options=options,
                 name="dictionary",
-                title="Variable Dictionary / Codebook",
+                title="Variable Dictionary / Codebook (Compact)",
                 visible="(includeDictionary)",
                 clearWith=list(
                     "vars",
@@ -356,21 +531,9 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                         `title`="Variable label", 
                         `type`="text"),
                     list(
-                        `name`="jtype", 
-                        `title`="jamovi variable type", 
-                        `type`="text"),
-                    list(
-                        `name`="measure", 
-                        `title`="jamovi measurement level", 
-                        `type`="text"),
-                    list(
                         `name`="inferred", 
                         `title`="Inferred variable type", 
                         `type`="text"),
-                    list(
-                        `name`="valid", 
-                        `title`="Valid cases", 
-                        `type`="integer"),
                     list(
                         `name`="missing", 
                         `title`="Missing", 
@@ -384,20 +547,54 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                         `title`="Unique valid values", 
                         `type`="integer"),
                     list(
-                        `name`="min", 
-                        `title`="Minimum", 
-                        `type`="number"),
+                        `name`="recommendedAction", 
+                        `title`="Recommended action", 
+                        `type`="text"))))
+            self$add(jmvcore::Table$new(
+                options=options,
+                name="exportCodebook",
+                title="Exportable Codebook",
+                visible="(includeExportCodebook)",
+                clearWith=list(
+                    "vars",
+                    "moderateMissing",
+                    "highMissing"),
+                columns=list(
                     list(
-                        `name`="max", 
-                        `title`="Maximum", 
-                        `type`="number"),
-                    list(
-                        `name`="examples", 
-                        `title`="Example values/categories", 
+                        `name`="variable", 
+                        `title`="Variable", 
                         `type`="text"),
                     list(
-                        `name`="flag", 
-                        `title`="Flag/warning", 
+                        `name`="label", 
+                        `title`="Label", 
+                        `type`="text"),
+                    list(
+                        `name`="type", 
+                        `title`="Type", 
+                        `type`="text"),
+                    list(
+                        `name`="measure", 
+                        `title`="Measurement level", 
+                        `type`="text"),
+                    list(
+                        `name`="missing", 
+                        `title`="Missing", 
+                        `type`="integer"),
+                    list(
+                        `name`="missingPct", 
+                        `title`="Missing %", 
+                        `type`="number"),
+                    list(
+                        `name`="validRangeCategories", 
+                        `title`="Valid range/categories", 
+                        `type`="text"),
+                    list(
+                        `name`="warnings", 
+                        `title`="Warnings", 
+                        `type`="text"),
+                    list(
+                        `name`="recommendedAction", 
+                        `title`="Recommended action", 
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -466,6 +663,31 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                 visible="(includeMissing)"))
             self$add(jmvcore::Table$new(
                 options=options,
+                name="missingPatterns",
+                title="Missing-Data Patterns",
+                visible="(includeMissing)",
+                clearWith=list(
+                    "vars",
+                    "maxCaseRows"),
+                columns=list(
+                    list(
+                        `name`="pattern", 
+                        `title`="Missing variables pattern", 
+                        `type`="text"),
+                    list(
+                        `name`="n", 
+                        `title`="Cases", 
+                        `type`="integer"),
+                    list(
+                        `name`="percent", 
+                        `title`="Percent of rows", 
+                        `type`="number"),
+                    list(
+                        `name`="rows", 
+                        `title`="Example row numbers", 
+                        `type`="text"))))
+            self$add(jmvcore::Table$new(
+                options=options,
                 name="quality",
                 title="Data-Quality Flags",
                 visible="(includeQuality)",
@@ -493,6 +715,159 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     list(
                         `name`="action", 
                         `title`="Suggested action", 
+                        `type`="text"))))
+            self$add(jmvcore::Table$new(
+                options=options,
+                name="rangeRuleFlags",
+                title="Out-of-Range Rule Flags",
+                visible="(includeRangeRules)",
+                clearWith=list(
+                    "vars",
+                    "rangeRules",
+                    "caseID"),
+                columns=list(
+                    list(
+                        `name`="variable", 
+                        `title`="Variable", 
+                        `type`="text"),
+                    list(
+                        `name`="validRange", 
+                        `title`="Valid range / allowed values", 
+                        `type`="text"),
+                    list(
+                        `name`="observedRange", 
+                        `title`="Observed range in data", 
+                        `type`="text"),
+                    list(
+                        `name`="rows", 
+                        `title`="Row numbers / case IDs", 
+                        `type`="text"),
+                    list(
+                        `name`="outOfRangeValues", 
+                        `title`="Out-of-range values found", 
+                        `type`="text"),
+                    list(
+                        `name`="n", 
+                        `title`="Flagged n", 
+                        `type`="integer"),
+                    list(
+                        `name`="action", 
+                        `title`="Recommended action", 
+                        `type`="text"))))
+            self$add(jmvcore::Table$new(
+                options=options,
+                name="duplicateReview",
+                title="Duplicate Case Review",
+                visible="(includeDuplicateReview)",
+                clearWith=list(
+                    "vars",
+                    "caseID"),
+                columns=list(
+                    list(
+                        `name`="issue", 
+                        `title`="Issue", 
+                        `type`="text"),
+                    list(
+                        `name`="rows", 
+                        `title`="Row numbers / case IDs", 
+                        `type`="text"),
+                    list(
+                        `name`="n", 
+                        `title`="Count", 
+                        `type`="integer"),
+                    list(
+                        `name`="details", 
+                        `title`="Details", 
+                        `type`="text"),
+                    list(
+                        `name`="action", 
+                        `title`="Recommended action", 
+                        `type`="text"))))
+            self$add(jmvcore::Table$new(
+                options=options,
+                name="surveyResponseFlags",
+                title="Survey Response Pattern Flags",
+                visible="(includeSurveyChecks)",
+                clearWith=list(
+                    "vars",
+                    "caseID"),
+                columns=list(
+                    list(
+                        `name`="row", 
+                        `title`="Row number / case ID", 
+                        `type`="text"),
+                    list(
+                        `name`="issue", 
+                        `title`="Issue", 
+                        `type`="text"),
+                    list(
+                        `name`="variables", 
+                        `title`="Variables checked", 
+                        `type`="text"),
+                    list(
+                        `name`="details", 
+                        `title`="Details", 
+                        `type`="text"),
+                    list(
+                        `name`="action", 
+                        `title`="Recommended action", 
+                        `type`="text"))))
+            self$add(jmvcore::Table$new(
+                options=options,
+                name="attentionCheckFlags",
+                title="Attention Check Flags",
+                visible="(includeAttentionChecks)",
+                clearWith=list(
+                    "vars",
+                    "caseID"),
+                columns=list(
+                    list(
+                        `name`="row", 
+                        `title`="Row number / case ID", 
+                        `type`="text"),
+                    list(
+                        `name`="issue", 
+                        `title`="Attention-check issue", 
+                        `type`="text"),
+                    list(
+                        `name`="variables", 
+                        `title`="Variables checked", 
+                        `type`="text"),
+                    list(
+                        `name`="details", 
+                        `title`="Details", 
+                        `type`="text"),
+                    list(
+                        `name`="action", 
+                        `title`="Recommended action", 
+                        `type`="text"))))
+            self$add(jmvcore::Table$new(
+                options=options,
+                name="metadataSuggestions",
+                title="jamovi Metadata Repair Suggestions",
+                visible="(includeQuality)",
+                clearWith=list(
+                    "vars"),
+                columns=list(
+                    list(
+                        `name`="variable", 
+                        `title`="Variable", 
+                        `type`="text"),
+                    list(
+                        `name`="currentMeasure", 
+                        `title`="Current measurement level", 
+                        `type`="text"),
+                    list(
+                        `name`="inferredType", 
+                        `title`="Inferred type", 
+                        `type`="text"),
+                    list(
+                        `name`="suggestion", 
+                        `title`="Suggested repair", 
+                        `type`="text"),
+                    list(
+                        `name`="reason", 
+                        `title`="Reason", 
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -588,10 +963,22 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                 visible="(includeGraphs)",
                 clearWith=list(
                     "vars",
-                    "graphMaxVars"),
+                    "graphMaxVars",
+                    "includeNormalCurveHistograms"),
                 width=720,
                 height=560,
                 renderFun=".numericPlot"))
+            self$add(jmvcore::Image$new(
+                options=options,
+                name="violinPlot",
+                title="Numeric Violin Plots",
+                visible="(includeGraphs && includeViolinPlots)",
+                clearWith=list(
+                    "vars",
+                    "graphMaxVars"),
+                width=720,
+                height=560,
+                renderFun=".violinPlot"))
             self$add(jmvcore::Image$new(
                 options=options,
                 name="boxPlot",
@@ -615,6 +1002,17 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                 width=720,
                 height=560,
                 renderFun=".categoricalPlot"))
+            self$add(jmvcore::Image$new(
+                options=options,
+                name="surveyPlot",
+                title="Survey Raincloud Plots",
+                visible="(includeGraphs && includeSurveyPlots)",
+                clearWith=list(
+                    "vars",
+                    "graphMaxVars"),
+                width=760,
+                height=560,
+                renderFun=".surveyPlot"))
             self$add(jmvcore::Image$new(
                 options=options,
                 name="correlationPlot",
@@ -864,6 +1262,18 @@ dataAuditBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 #' @param includeGraphs .
 #' @param includeAssumptions .
 #' @param includeSummary .
+#' @param includeAuditScore .
+#' @param includeChecklist .
+#' @param includeExportCodebook .
+#' @param includeRangeRules .
+#' @param includeDuplicateReview .
+#' @param includeSurveyChecks .
+#' @param includeAttentionChecks .
+#' @param includeViolinPlots .
+#' @param includeNormalCurveHistograms .
+#' @param includeSurveyPlots .
+#' @param rangeRules .
+#' @param screeningDesign .
 #' @param normalityChecks .
 #' @param outlierChecks .
 #' @param homogeneityChecks .
@@ -883,19 +1293,31 @@ dataAuditBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 #' @param graphTopCategories .
 #' @return A results object containing:
 #' \tabular{llllll}{
+#'   \code{results$moduleRefs} \tab \tab \tab \tab \tab a html \cr
 #'   \code{results$summary} \tab \tab \tab \tab \tab a html \cr
+#'   \code{results$auditScore} \tab \tab \tab \tab \tab a table \cr
+#'   \code{results$screeningChecklist} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$overview} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$dictionary} \tab \tab \tab \tab \tab a table \cr
+#'   \code{results$exportCodebook} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$missingByVariable} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$missingByCase} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$missingText} \tab \tab \tab \tab \tab a html \cr
+#'   \code{results$missingPatterns} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$quality} \tab \tab \tab \tab \tab a table \cr
+#'   \code{results$rangeRuleFlags} \tab \tab \tab \tab \tab a table \cr
+#'   \code{results$duplicateReview} \tab \tab \tab \tab \tab a table \cr
+#'   \code{results$surveyResponseFlags} \tab \tab \tab \tab \tab a table \cr
+#'   \code{results$attentionCheckFlags} \tab \tab \tab \tab \tab a table \cr
+#'   \code{results$metadataSuggestions} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$descriptives} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$frequencies} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$missingPlot} \tab \tab \tab \tab \tab an image \cr
 #'   \code{results$numericPlot} \tab \tab \tab \tab \tab an image \cr
+#'   \code{results$violinPlot} \tab \tab \tab \tab \tab an image \cr
 #'   \code{results$boxPlot} \tab \tab \tab \tab \tab an image \cr
 #'   \code{results$categoricalPlot} \tab \tab \tab \tab \tab an image \cr
+#'   \code{results$surveyPlot} \tab \tab \tab \tab \tab an image \cr
 #'   \code{results$correlationPlot} \tab \tab \tab \tab \tab an image \cr
 #'   \code{results$normality} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$normalityNote} \tab \tab \tab \tab \tab a html \cr
@@ -907,9 +1329,9 @@ dataAuditBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 #'
 #' Tables can be converted to data frames with \code{asDF} or \code{\link{as.data.frame}}. For example:
 #'
-#' \code{results$overview$asDF}
+#' \code{results$auditScore$asDF}
 #'
-#' \code{as.data.frame(results$overview)}
+#' \code{as.data.frame(results$auditScore)}
 #'
 #' @export
 dataAudit <- function(
@@ -928,6 +1350,18 @@ dataAudit <- function(
     includeGraphs = FALSE,
     includeAssumptions = FALSE,
     includeSummary = TRUE,
+    includeAuditScore = TRUE,
+    includeChecklist = TRUE,
+    includeExportCodebook = TRUE,
+    includeRangeRules = FALSE,
+    includeDuplicateReview = TRUE,
+    includeSurveyChecks = FALSE,
+    includeAttentionChecks = FALSE,
+    includeViolinPlots = FALSE,
+    includeNormalCurveHistograms = FALSE,
+    includeSurveyPlots = FALSE,
+    rangeRules = "",
+    screeningDesign = "ungrouped",
     normalityChecks = TRUE,
     outlierChecks = TRUE,
     homogeneityChecks = FALSE,
@@ -941,7 +1375,7 @@ dataAudit <- function(
     vifWarning = 5,
     vifSerious = 10,
     skewThreshold = 1,
-    kurtosisThreshold = 1,
+    kurtosisThreshold = 2,
     maxCaseRows = 50,
     graphMaxVars = 9,
     graphTopCategories = 12) {
@@ -979,6 +1413,18 @@ dataAudit <- function(
         includeGraphs = includeGraphs,
         includeAssumptions = includeAssumptions,
         includeSummary = includeSummary,
+        includeAuditScore = includeAuditScore,
+        includeChecklist = includeChecklist,
+        includeExportCodebook = includeExportCodebook,
+        includeRangeRules = includeRangeRules,
+        includeDuplicateReview = includeDuplicateReview,
+        includeSurveyChecks = includeSurveyChecks,
+        includeAttentionChecks = includeAttentionChecks,
+        includeViolinPlots = includeViolinPlots,
+        includeNormalCurveHistograms = includeNormalCurveHistograms,
+        includeSurveyPlots = includeSurveyPlots,
+        rangeRules = rangeRules,
+        screeningDesign = screeningDesign,
         normalityChecks = normalityChecks,
         outlierChecks = outlierChecks,
         homogeneityChecks = homogeneityChecks,

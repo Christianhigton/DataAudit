@@ -16,6 +16,8 @@ dataAudit_example_data <- function() {
     problematic$binary <- rep(c(0, 1), 25)
     problematic$likert_1 <- sample(1:5, 50, replace = TRUE)
     problematic$likert_2 <- sample(1:7, 50, replace = TRUE)
+    problematic$likert_3 <- sample(1:5, 50, replace = TRUE)
+    problematic[6, c("likert_1", "likert_2", "likert_3")] <- 3
     problematic$constant <- 1
     problematic$empty <- NA_real_
     problematic$miscoded <- c(rep(999, 3), sample(1:10, 47, replace = TRUE))

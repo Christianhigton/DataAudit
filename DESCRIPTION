@@ -2,8 +2,8 @@ Package: DataAudit
 Type: Package
 Title: Data Audit and Codebook for jamovi
 Version: 0.1.1
-Author: DataAudit contributors
-Maintainer: DataAudit contributors <maintainer@example.com>
+Author: Christian Higton
+Maintainer: Christian Higton <christian.higton@gmail.com>
 Description: Produces a teaching-friendly data audit and codebook for jamovi
     datasets, including variable type inference, missing-data summaries,
     data-quality flags, descriptives, and optional assumption screening.

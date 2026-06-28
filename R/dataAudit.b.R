@@ -3,6 +3,14 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
     inherit = dataAuditBase,
     private = list(
         .run = function() {
+            self$results$moduleRefs$setContent(
+                "<div style=\"font-family:sans-serif;font-size:0.9em;color:#555;line-height:1.5\">",
+                "<p><strong>Higton, C. (2025).</strong> <em>DataAudit: Data audit and codebook for jamovi</em> (Version 0.1.1) [jamovi module].</p>",
+                "<p><strong>Tabachnick, B. G., &amp; Fidell, L. S. (2019).</strong> <em>Using Multivariate Statistics</em> (7th ed.). Pearson.</p>",
+                "<p style=\"font-size:0.85em;color:#777\">See also: jamovi project (2025). <em>jamovi</em> (Version 2.x) [Computer Software]. Retrieved from https://www.jamovi.org</p>",
+                "</div>"
+            )
+
             data <- as.data.frame(self$data, stringsAsFactors = FALSE)
             opts <- self$options
             vars <- .da_selected_vars(data, opts$vars)
@@ -13,11 +21,29 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
                 return(invisible(NULL))
             }
 
+            if (opts$moderateMissing >= opts$highMissing) {
+                self$results$summary$setContent(.da_html("Configuration error: the moderate missingness threshold must be lower than the high missingness threshold. Please correct the Thresholds settings."))
+                return(invisible(NULL))
+            }
+
             audit <- .da_build_audit(data, vars, opts)
             overview <- .da_dataset_overview(data, vars, audit$dictionary, opts)
             missing <- .da_missing_by_variable(data, vars, opts)
             missing_case <- .da_missing_by_case(data, vars, opts$caseID, opts$maxCaseRows)
             quality <- .da_quality_flags(data, vars, audit$dictionary, opts)
+            outliers <- .da_outliers(data, vars, audit$dictionary, opts)
+            range_flags <- .da_range_rule_flags(data, vars, opts)
+            duplicates <- .da_duplicate_review(data, vars, opts$caseID)
+            survey_flags <- .da_survey_response_flags(data, vars, audit$dictionary, opts$caseID)
+            attention_flags <- .da_attention_check_flags(data, vars, audit$dictionary, opts$caseID)
+            metadata <- .da_metadata_suggestions(audit$dictionary)
+            desc <- .da_descriptives(data, vars, audit$dictionary)
+
+            if (opts$includeAuditScore)
+                .da_add_rows(self$results$auditScore, .da_audit_score(data, vars, audit$dictionary, missing, quality, outliers, range_flags, duplicates, metadata, opts))
+
+            if (opts$includeChecklist)
+                .da_add_rows(self$results$screeningChecklist, .da_screening_checklist(data, vars, audit$dictionary, missing, quality, outliers, range_flags, duplicates, metadata, desc, opts))
 
             if (opts$includeSummary)
                 self$results$summary$setContent(.da_summary_html(data, vars, overview, audit$dictionary, quality, opts))
@@ -26,19 +52,37 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
                 .da_add_rows(self$results$overview, overview)
 
             if (opts$includeDictionary)
-                .da_add_rows(self$results$dictionary, audit$dictionary)
+                .da_add_rows(self$results$dictionary, .da_compact_dictionary(audit$dictionary))
+
+            if (opts$includeExportCodebook)
+                .da_add_rows(self$results$exportCodebook, .da_export_codebook(audit$dictionary))
 
             if (opts$includeMissing) {
                 .da_add_rows(self$results$missingByVariable, missing)
                 .da_add_rows(self$results$missingByCase, missing_case)
+                .da_add_rows(self$results$missingPatterns, .da_missing_patterns(data, vars, opts$maxCaseRows))
                 self$results$missingText$setContent(.da_missing_text_html(data, vars, missing))
             }
 
-            if (opts$includeQuality)
+            if (opts$includeQuality) {
                 .da_add_rows(self$results$quality, quality)
+                .da_add_rows(self$results$metadataSuggestions, metadata)
+            }
+
+            if (opts$includeRangeRules)
+                .da_add_rows(self$results$rangeRuleFlags, range_flags)
+
+            if (opts$includeDuplicateReview)
+                .da_add_rows(self$results$duplicateReview, duplicates)
+
+            if (opts$includeSurveyChecks)
+                .da_add_rows(self$results$surveyResponseFlags, survey_flags)
+
+            if (opts$includeAttentionChecks)
+                .da_add_rows(self$results$attentionCheckFlags, attention_flags)
 
             if (opts$includeDescriptives)
-                .da_add_rows(self$results$descriptives, .da_descriptives(data, vars, audit$dictionary))
+                .da_add_rows(self$results$descriptives, desc)
 
             if (opts$includeFrequencies)
                 .da_add_rows(self$results$frequencies, .da_frequencies(data, vars, audit$dictionary))
@@ -50,6 +94,8 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
                 self$results$boxPlot$setState(plot_state)
                 self$results$categoricalPlot$setState(plot_state)
                 self$results$correlationPlot$setState(plot_state)
+                self$results$violinPlot$setState(plot_state)
+                self$results$surveyPlot$setState(plot_state)
             }
 
             if (opts$includeAssumptions) {
@@ -60,7 +106,7 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
                     ))
                 }
                 if (opts$outlierChecks)
-                    .da_add_rows(self$results$outliers, .da_outliers(data, vars, audit$dictionary, opts))
+                    .da_add_rows(self$results$outliers, outliers)
                 if (opts$homogeneityChecks)
                     .da_add_rows(self$results$homogeneity, .da_levene(data, vars, audit$dictionary, opts))
                 if (opts$linearityChecks)
@@ -83,6 +129,12 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
         },
         .correlationPlot = function(image, ...) {
             .da_render_correlation_plot(image$state)
+        },
+        .violinPlot = function(image, ...) {
+            .da_render_violin_plot(image$state)
+        },
+        .surveyPlot = function(image, ...) {
+            .da_render_survey_plot(image$state)
         }
     )
 )
@@ -149,8 +201,29 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
         max = if (length(num) > 0L) max(num, na.rm = TRUE) else NA_real_,
         examples = examples,
         flag = info$flag,
+        recommendedAction = .da_recommended_action(info$type, info$flag, miss_pct),
         stringsAsFactors = FALSE
     )
+}
+
+.da_recommended_action <- function(inferred, flag, missing_pct = NA_real_) {
+    if (!is.na(missing_pct) && missing_pct >= 20)
+        return("Review missingness before analysis")
+    if (grepl("miscoded missing|out-of-range", flag, ignore.case = TRUE))
+        return("Set coded missing values to missing")
+    if (inferred == "ID variable")
+        return("Use as ID only")
+    if (inferred %in% c("Nominal categorical", "Dichotomous/binary", "Ordinal"))
+        return("Use as categorical/ordinal")
+    if (inferred == "Possible scale item")
+        return("Check scale coding and direction")
+    if (inferred %in% c("Continuous numeric", "Integer/count"))
+        return("Suitable for descriptives/regression")
+    if (inferred %in% c("Empty variable", "Constant variable"))
+        return("Exclude or correct before analysis")
+    if (grepl("categorical|scale-like|metadata", flag, ignore.case = TRUE))
+        return("Recode as nominal/ordinal if appropriate")
+    "Review before analysis"
 }
 
 # Infer the practical analytic role of a variable from values as well as metadata.
@@ -427,6 +500,347 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
 
     if (length(rows) == 0L)
         add("(dataset)", "No major data-quality flags", "No automated checks raised a problem.", "information", "Still review coding and metadata before analysis.")
+    out <- do.call(rbind.data.frame, rows)
+    out$details <- .da_truncate(out$details)
+    out$action  <- .da_truncate(out$action)
+    out
+}
+
+
+.da_status <- function(severity) {
+    ifelse(severity >= 2, "Serious issues", ifelse(severity == 1, "Review", "Good"))
+}
+
+.da_audit_score <- function(data, vars, dictionary, missing, quality, outliers, range_flags, duplicates, metadata, opts) {
+    total_cells <- nrow(data) * length(vars)
+    missing_pct <- .da_pct(sum(dictionary$missing), total_cells)
+    missing_status <- if (!is.na(missing_pct) && missing_pct >= opts$highMissing) 2L else if (!is.na(missing_pct) && missing_pct >= opts$moderateMissing) 1L else 0L
+    coding_serious <- sum(quality$severity == "serious", na.rm = TRUE) + nrow(range_flags)
+    coding_warning <- sum(quality$severity == "warning", na.rm = TRUE)
+    coding_status <- if (coding_serious > 0L) 2L else if (coding_warning > 0L) 1L else 0L
+    outlier_n <- sum(pmax(outliers$zOutliers, outliers$iqrOutliers, na.rm = TRUE), na.rm = TRUE)
+    outlier_status <- if (outlier_n >= 10L) 2L else if (outlier_n > 0L) 1L else 0L
+    metadata_status <- if (nrow(metadata) >= 3L) 2L else if (nrow(metadata) > 0L) 1L else 0L
+    assumption_status <- if (!isTRUE(opts$includeAssumptions)) 1L else if (outlier_status > 0L || metadata_status > 0L) 1L else 0L
+    duplicate_status <- if (nrow(duplicates) > 0L) 1L else 0L
+    overall <- max(missing_status, coding_status, outlier_status, metadata_status, assumption_status, duplicate_status, na.rm = TRUE)
+
+    data.frame(
+        domain = c("Overall", "Missingness", "Coding and accuracy", "Outliers", "jamovi metadata", "Assumptions"),
+        status = .da_status(c(overall, missing_status, coding_status, outlier_status, metadata_status, assumption_status)),
+        evidence = c(
+            "Highest status across all screening domains.",
+            sprintf("%.1f%% of selected data cells are missing.", missing_pct %||% NA_real_),
+            paste(coding_serious, "serious and", coding_warning, "warning coding/data-quality flags."),
+            paste(outlier_n, "potential univariate outlier flag(s)."),
+            paste(nrow(metadata), "metadata repair suggestion(s)."),
+            if (isTRUE(opts$includeAssumptions)) "Assumption screening was requested." else "Assumption screening was not requested."
+        ),
+        recommendedAction = c(
+            if (overall >= 2L) "Resolve serious flags before inferential analysis." else if (overall == 1L) "Review flagged domains before analysis." else "Proceed after routine review.",
+            if (missing_status >= 1L) "Inspect missing-data patterns and consider sensitivity checks." else "Document low missingness.",
+            if (coding_status >= 1L) "Review impossible values, miscoded missing values, sparse categories, and labels." else "No major coding action flagged.",
+            if (outlier_status >= 1L) "Inspect flagged rows and justify retention, transformation, winsorising, or removal." else "No univariate outlier action flagged.",
+            if (metadata_status >= 1L) "Adjust jamovi measurement levels where suggested." else "No metadata repair action flagged.",
+            if (assumption_status >= 1L) "Run assumption checks for the planned model." else "Assumption screen is acceptable for initial review."
+        ),
+        stringsAsFactors = FALSE
+    )
+}
+
+.da_screening_checklist <- function(data, vars, dictionary, missing, quality, outliers, range_flags, duplicates, metadata, desc, opts) {
+    design <- tolower(trimws(as.character(opts$screeningDesign %||% "ungrouped")))
+    if (!design %in% c("grouped", "ungrouped"))
+        design <- "ungrouped"
+    missing_pct <- .da_pct(sum(dictionary$missing), nrow(data) * length(vars))
+    outlier_n <- sum(pmax(outliers$zOutliers, outliers$iqrOutliers, na.rm = TRUE), na.rm = TRUE)
+    has_group <- !is.null(opts$group) && length(opts$group) == 1L && opts$group %in% names(data)
+    rows <- data.frame(
+        step = c("1. Check data accuracy", "2. Check missing data", "3. Check outliers", "4. Check assumptions", "5. Consider transformations", "6. Check multicollinearity/singularity", "7. Screen for design"),
+        status = c(
+            if (nrow(range_flags) > 0L || any(quality$severity %in% c("warning", "serious"))) "Review" else "Good",
+            if (!is.na(missing_pct) && missing_pct >= opts$highMissing) "Serious issues" else if (!is.na(missing_pct) && missing_pct >= opts$moderateMissing) "Review" else "Good",
+            if (outlier_n > 0L) "Review" else "Good",
+            if (isTRUE(opts$includeAssumptions)) "In progress" else "Review",
+            if (any(abs(desc$skewness) > opts$skewThreshold, na.rm = TRUE)) "Review" else "Good",
+            if (length(as.character(opts$predictors %||% character())) >= 2L) "In progress" else "Review",
+            if (design == "grouped" && !has_group) "Review" else "Good"
+        ),
+        check = c(
+            "Impossible values, miscoded missing values, labels, duplicate rows, and metadata mismatches.",
+            "Missing by variable, missing by case, and common missing-data patterns.",
+            "Univariate z-score and IQR screens with row/case IDs.",
+            "Normality, linearity, homogeneity, and multicollinearity where selected.",
+            "Skewness/kurtosis screens suggest whether transformation may be worth considering.",
+            "VIF is available when at least two predictors are selected.",
+            if (design == "grouped") "Grouped screening: also review grouping variable and homogeneity." else "Ungrouped screening: focus on distributions, outliers, linearity, and multicollinearity."
+        ),
+        nextAction = c(
+            "Correct entry/coding errors before modelling.",
+            "Decide whether to delete, impute, model missingness, or run sensitivity checks.",
+            "Understand why flagged rows exist before reducing influence or removing cases.",
+            "Run assumption checks that match the planned analysis.",
+            "Only transform when it improves the planned analysis and remains interpretable.",
+            "Remove duplicates/composites or combine variables only with a defensible reason.",
+            if (design == "grouped") "Select a grouping variable and review group balance/variance." else "Continue with ungrouped screening steps."
+        ),
+        stringsAsFactors = FALSE
+    )
+    rows$check      <- .da_truncate(rows$check)
+    rows$nextAction <- .da_truncate(rows$nextAction)
+    rows
+}
+
+.da_export_codebook <- function(dictionary) {
+    data.frame(
+        variable = dictionary$variable,
+        label = .da_truncate(dictionary$label, 60L),
+        type = dictionary$inferred,
+        measure = dictionary$measure,
+        missing = dictionary$missing,
+        missingPct = dictionary$missingPct,
+        validRangeCategories = .da_truncate(ifelse(is.na(dictionary$min) & is.na(dictionary$max), dictionary$examples, paste(dictionary$min, dictionary$max, sep = " to ")), 60L),
+        warnings = .da_truncate(dictionary$flag),
+        recommendedAction = .da_truncate(dictionary$recommendedAction),
+        stringsAsFactors = FALSE
+    )
+}
+
+.da_compact_dictionary <- function(dictionary) {
+    data.frame(
+        variable = dictionary$variable,
+        label = dictionary$label,
+        inferred = dictionary$inferred,
+        missing = dictionary$missing,
+        missingPct = dictionary$missingPct,
+        unique = dictionary$unique,
+        recommendedAction = dictionary$recommendedAction,
+        stringsAsFactors = FALSE
+    )
+}
+
+.da_missing_patterns <- function(data, vars, max_rows = 50L) {
+    scoped <- data[, vars, drop = FALSE]
+    miss <- is.na(scoped)
+    if (nrow(miss) == 0L || !any(miss))
+        return(data.frame(pattern = character(), n = integer(), percent = numeric(), rows = character(), stringsAsFactors = FALSE))
+    patterns_all <- apply(miss, 1L, function(row) {
+        missing <- vars[row]
+        if (length(missing) == 0L) "(complete)" else paste(missing, collapse = " + ")
+    })
+    patterns <- patterns_all[patterns_all != "(complete)"]
+    tab <- sort(table(patterns), decreasing = TRUE)
+    rows <- lapply(names(tab), function(pattern) {
+        idx <- which(patterns_all == pattern)
+        data.frame(pattern = pattern, n = as.integer(tab[[pattern]]), percent = .da_pct(tab[[pattern]], nrow(data)), rows = paste(utils::head(idx, max_rows), collapse = ", "), stringsAsFactors = FALSE)
+    })
+    do.call(rbind.data.frame, rows)
+}
+
+.da_parse_range_rules <- function(text, names) {
+    text <- as.character(text %||% "")
+    parts <- unlist(strsplit(text, "[\n;]+"))
+    parts <- trimws(parts)
+    parts <- parts[nzchar(parts)]
+    rules <- list()
+    for (part in parts) {
+        bits <- strsplit(part, "=", fixed = TRUE)[[1]]
+        if (length(bits) != 2L)
+            next
+        variable <- trimws(bits[1])
+        rule <- trimws(bits[2])
+        if (!variable %in% names)
+            next
+        rules[[length(rules) + 1L]] <- list(variable = variable, rule = rule)
+    }
+    rules
+}
+
+.da_format_rule <- function(rule_text) {
+    if (grepl(":", rule_text, fixed = TRUE)) {
+        lim <- suppressWarnings(as.numeric(strsplit(rule_text, ":", fixed = TRUE)[[1]]))
+        if (length(lim) == 2L && all(!is.na(lim)))
+            return(paste(min(lim), "to", max(lim)))
+    }
+    allowed <- trimws(unlist(strsplit(rule_text, "[|,]")))
+    paste(allowed, collapse = ", ")
+}
+
+.da_observed_range <- function(x) {
+    num <- suppressWarnings(as.numeric(as.character(x[!is.na(x)])))
+    if (length(num) > 0L && !any(is.na(num))) {
+        paste(min(num), "to", max(num))
+    } else {
+        vals <- sort(unique(as.character(x[!is.na(x)])))
+        paste(utils::head(vals, 8L), collapse = ", ")
+    }
+}
+
+.da_range_rule_flags <- function(data, vars, opts) {
+    rules <- .da_parse_range_rules(opts$rangeRules, names(data))
+    empty <- data.frame(variable = character(), validRange = character(), observedRange = character(), rows = character(), outOfRangeValues = character(), n = integer(), action = character(), stringsAsFactors = FALSE)
+    if (length(rules) == 0L)
+        return(empty)
+    rows <- list()
+    for (rule in rules) {
+        v <- rule$variable
+        if (!v %in% vars)
+            next
+        x <- data[[v]]
+        rule_text <- rule$rule
+        bad <- rep(FALSE, length(x))
+        if (grepl(":", rule_text, fixed = TRUE)) {
+            lim <- suppressWarnings(as.numeric(strsplit(rule_text, ":", fixed = TRUE)[[1]]))
+            if (length(lim) == 2L && all(!is.na(lim))) {
+                num <- suppressWarnings(as.numeric(as.character(x)))
+                bad <- !is.na(num) & (num < min(lim) | num > max(lim))
+            }
+        } else {
+            allowed <- trimws(unlist(strsplit(rule_text, "[|,]")))
+            bad <- !is.na(x) & !as.character(x) %in% allowed
+        }
+        idx <- which(bad)
+        if (length(idx) > 0L) {
+            rows[[length(rows) + 1L]] <- data.frame(
+                variable = v,
+                validRange = .da_format_rule(rule_text),
+                observedRange = .da_observed_range(x),
+                rows = .da_case_values(data, idx, opts$caseID),
+                outOfRangeValues = paste(utils::head(unique(as.character(x[idx])), 8L), collapse = ", "),
+                n = length(idx),
+                action = "Check source data and recode impossible values or set justified missing codes to missing.",
+                stringsAsFactors = FALSE
+            )
+        }
+    }
+    if (length(rows) == 0L)
+        return(empty)
+    do.call(rbind.data.frame, rows)
+}
+
+.da_duplicate_review <- function(data, vars, case_id) {
+    rows <- list()
+    scoped <- data[, vars, drop = FALSE]
+    dup_idx <- which(duplicated(scoped) | duplicated(scoped, fromLast = TRUE))
+    if (length(dup_idx) > 0L) {
+        rows[[length(rows) + 1L]] <- data.frame(
+            issue = "Fully duplicated selected rows",
+            rows = paste(utils::head(dup_idx, 30L), collapse = ", "),
+            n = length(dup_idx),
+            details = "Rows match across the selected variables.",
+            action = "Check whether these are true repeated observations or accidental duplicate cases.",
+            stringsAsFactors = FALSE
+        )
+    }
+    if (!is.null(case_id) && length(case_id) == 1L && case_id %in% names(data)) {
+        ids <- as.character(data[[case_id]])
+        repeated <- which(!is.na(ids) & nzchar(ids) & (duplicated(ids) | duplicated(ids, fromLast = TRUE)))
+        if (length(repeated) > 0L) {
+            rows[[length(rows) + 1L]] <- data.frame(
+                issue = "Repeated case ID",
+                rows = paste(utils::head(paste0(repeated, "=", ids[repeated]), 30L), collapse = ", "),
+                n = length(repeated),
+                details = paste(length(unique(ids[repeated])), "case ID value(s) appear more than once."),
+                action = "Resolve repeated IDs before case-level analyses.",
+                stringsAsFactors = FALSE
+            )
+        }
+    }
+    if (length(rows) == 0L)
+        return(data.frame(issue = character(), rows = character(), n = integer(), details = character(), action = character(), stringsAsFactors = FALSE))
+    do.call(rbind.data.frame, rows)
+}
+
+.da_survey_vars <- function(vars, dictionary) {
+    keep <- dictionary$variable[dictionary$inferred %in% c("Ordinal", "Possible scale item")]
+    intersect(vars, keep)
+}
+
+.da_response_flags_impl <- function(data, vars, dictionary, case_id, issue_straight, action_straight, issue_variation, action_variation) {
+    survey_vars <- .da_survey_vars(vars, dictionary)
+    if (length(survey_vars) < 3L)
+        return(data.frame(row = character(), issue = character(), variables = character(), details = character(), action = character(), stringsAsFactors = FALSE))
+    scoped <- data[, survey_vars, drop = FALSE]
+    rows <- list()
+    for (i in seq_len(nrow(scoped))) {
+        values <- as.character(unlist(scoped[i, , drop = TRUE], use.names = FALSE))
+        values <- values[!is.na(values) & nzchar(values)]
+        if (length(values) < 3L)
+            next
+        prop_common <- max(table(values)) / length(values)
+        unique_n <- length(unique(values))
+        if (prop_common >= .90 || unique_n == 1L) {
+            rows[[length(rows) + 1L]] <- data.frame(
+                row = .da_case_values(data, i, case_id),
+                issue = issue_straight,
+                variables = paste(survey_vars, collapse = ", "),
+                details = sprintf("%.0f%% of available survey-like responses use the same value.", 100 * prop_common),
+                action = action_straight,
+                stringsAsFactors = FALSE
+            )
+        } else if (unique_n <= 2L && length(values) >= 6L) {
+            rows[[length(rows) + 1L]] <- data.frame(
+                row = .da_case_values(data, i, case_id),
+                issue = issue_variation,
+                variables = paste(survey_vars, collapse = ", "),
+                details = paste(unique_n, "unique response values across", length(values), "survey-like items."),
+                action = action_variation,
+                stringsAsFactors = FALSE
+            )
+        }
+    }
+    if (length(rows) == 0L)
+        return(data.frame(row = character(), issue = character(), variables = character(), details = character(), action = character(), stringsAsFactors = FALSE))
+    do.call(rbind.data.frame, rows)
+}
+
+.da_survey_response_flags <- function(data, vars, dictionary, case_id) {
+    .da_response_flags_impl(
+        data, vars, dictionary, case_id,
+        issue_straight  = "Possible straight-lining",
+        action_straight = "Review whether this response pattern is plausible before scoring survey scales.",
+        issue_variation  = "Low response variation",
+        action_variation = "Check whether low variation is expected for this respondent."
+    )
+}
+
+.da_attention_check_flags <- function(data, vars, dictionary, case_id) {
+    .da_response_flags_impl(
+        data, vars, dictionary, case_id,
+        issue_straight  = "Possible B-lining / straight-lining",
+        action_straight = "Review this respondent before scoring scales; decide whether to retain, exclude, or run sensitivity checks.",
+        issue_variation  = "Low response variation",
+        action_variation = "Check whether this response pattern is plausible or indicates inattentive responding."
+    )
+}
+
+.da_metadata_suggestions <- function(dictionary) {
+    rows <- list()
+    for (i in seq_len(nrow(dictionary))) {
+        measure <- tolower(dictionary$measure[i])
+        inferred <- dictionary$inferred[i]
+        suggestion <- ""
+        reason <- ""
+        if (measure == "continuous" && inferred %in% c("Dichotomous/binary", "Ordinal", "Nominal categorical", "Possible scale item")) {
+            suggestion <- if (inferred == "Nominal categorical") "Change measurement level to nominal." else "Change measurement level to ordinal."
+            reason <- "Values look categorical or scale-like rather than continuous."
+        } else if (measure %in% c("nominal", "ordinal") && inferred %in% c("Continuous numeric", "Integer/count")) {
+            suggestion <- "Consider changing measurement level to continuous."
+            reason <- "Values look numeric with enough unique values for continuous analysis."
+        }
+        if (nzchar(suggestion)) {
+            rows[[length(rows) + 1L]] <- data.frame(
+                variable = dictionary$variable[i],
+                currentMeasure = dictionary$measure[i],
+                inferredType = inferred,
+                suggestion = suggestion,
+                reason = reason,
+                stringsAsFactors = FALSE
+            )
+        }
+    }
+    if (length(rows) == 0L)
+        return(data.frame(variable = character(), currentMeasure = character(), inferredType = character(), suggestion = character(), reason = character(), stringsAsFactors = FALSE))
     do.call(rbind.data.frame, rows)
 }
 
@@ -585,8 +999,8 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
     p <- sm[1, "Pr(>F)"]
     df <- paste(sm[1, "Df"], sm[2, "Df"], sep = ", ")
     sds <- tapply(x, g, stats::sd, na.rm = TRUE)
-    vars <- sds^2
-    ratio <- if (any(vars == 0, na.rm = TRUE)) Inf else max(vars, na.rm = TRUE) / min(vars, na.rm = TRUE)
+    group_variances <- sds^2
+    ratio <- if (any(group_variances == 0, na.rm = TRUE)) Inf else max(group_variances, na.rm = TRUE) / min(group_variances, na.rm = TRUE)
     flag <- if (!is.na(p) && p < .05) "Variances may differ; consider Welch's correction or robust alternatives." else "No strong variance warning"
     data.frame(outcome = outcome, group = group_name, statistic = stat, df = df, p = p, groupSDs = paste(names(sds), round(sds, 3), sep = "=", collapse = "; "), varRatio = ratio, flag = flag, stringsAsFactors = FALSE)
 }
@@ -689,6 +1103,11 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
     .da_html(text)
 }
 
+.da_truncate <- function(x, n = 90L) {
+    x <- as.character(x)
+    ifelse(nchar(x) > n, paste0(substr(x, 1L, n - 1L), "…"), x)
+}
+
 .da_mean <- function(x) if (length(x) > 0L) mean(x) else NA_real_
 .da_sd <- function(x) if (length(x) > 1L) stats::sd(x) else NA_real_
 
@@ -718,7 +1137,8 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
         vars = vars,
         dictionary = dictionary,
         graphMaxVars = opts$graphMaxVars %||% 9L,
-        graphTopCategories = opts$graphTopCategories %||% 12L
+        graphTopCategories = opts$graphTopCategories %||% 12L,
+        includeNormalCurveHistograms = isTRUE(opts$includeNormalCurveHistograms)
     )
 }
 
@@ -810,7 +1230,11 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
             graphics::title(main = v)
             graphics::text(0.5, 0.5, "Not enough variation")
         } else {
-            graphics::hist(x, main = v, xlab = "", col = "#9ECAE1", border = "white")
+            h <- graphics::hist(x, main = v, xlab = "", col = "#9ECAE1", border = "white", freq = !isTRUE(state$includeNormalCurveHistograms))
+            if (isTRUE(state$includeNormalCurveHistograms) && length(unique(x)) >= 3L && .da_sd(x) > 0) {
+                xx <- seq(min(x), max(x), length.out = 100L)
+                graphics::lines(xx, stats::dnorm(xx, mean = mean(x), sd = stats::sd(x)), col = "#B2182B", lwd = 2)
+            }
             graphics::rug(x, col = "#2B6C9E")
         }
     }
@@ -896,6 +1320,104 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
     graphics::box()
     graphics::legend("right", inset = -0.16, legend = c("1", "0", "-1"), fill = c("#B2182B", "#F7F7F7", "#2166AC"), title = "r", xpd = TRUE, bty = "n")
     invisible(TRUE)
+}
+
+.da_render_violin_plot <- function(state) {
+    if (is.null(state))
+        return(.da_plot_message("No plot state is available."))
+    vars <- utils::head(.da_plot_numeric_vars(state), state$graphMaxVars)
+    if (length(vars) == 0L)
+        return(.da_plot_message("No numeric or scale-like variables are available for violin plots."))
+
+    values <- lapply(vars, function(v) .da_plot_numeric_values(state$data[[v]]))
+    names(values) <- vars
+    values <- values[vapply(values, function(x) length(unique(x)) >= 2L, logical(1))]
+    if (length(values) == 0L)
+        return(.da_plot_message("No numeric variables have enough variation for violin plots."))
+
+    old <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(old), add = TRUE)
+    graphics::par(mar = c(7, 4, 3, 1))
+    ylim <- range(unlist(values), na.rm = TRUE)
+    graphics::plot(seq_along(values), seq_along(values), type = "n", xaxt = "n", xlab = "", ylab = "Value", ylim = ylim, main = "Violin plots")
+    graphics::axis(1, at = seq_along(values), labels = names(values), las = 2, cex.axis = 0.75)
+    for (i in seq_along(values)) {
+        x <- values[[i]]
+        d <- stats::density(x, na.rm = TRUE)
+        width <- d$y / max(d$y) * 0.35
+        graphics::polygon(c(i - width, rev(i + width)), c(d$x, rev(d$x)), col = "#C6DBEF", border = "#2171B5")
+        graphics::points(rep(i, length(x)), x, pch = 16, col = grDevices::adjustcolor("#08306B", alpha.f = 0.25), cex = 0.6)
+        graphics::segments(i - 0.25, stats::median(x), i + 0.25, stats::median(x), lwd = 2, col = "#B2182B")
+    }
+    invisible(TRUE)
+}
+
+.da_render_survey_plot <- function(state) {
+    if (is.null(state))
+        return(.da_plot_message("No plot state is available."))
+    vars <- utils::head(.da_survey_vars(state$vars, state$dictionary), state$graphMaxVars)
+    if (length(vars) == 0L)
+        return(.da_plot_message("No survey-like variables are available for survey plots."))
+
+    values <- lapply(vars, function(v) .da_plot_numeric_values(state$data[[v]]))
+    names(values) <- vars
+    values <- values[vapply(values, function(x) length(x) >= 3L && length(unique(x)) >= 2L, logical(1))]
+    if (length(values) == 0L)
+        return(.da_plot_message("No survey-like variables have enough numeric variation for raincloud plots."))
+
+    old <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(old), add = TRUE)
+    layout <- .da_panel_layout(length(values))
+    graphics::par(mfrow = layout, mar = c(4, 4, 3, 1))
+    for (v in names(values))
+        .da_render_survey_raincloud(values[[v]], v)
+    invisible(TRUE)
+}
+
+.da_render_survey_raincloud <- function(x, title) {
+    x <- x[is.finite(x)]
+    rng <- range(x, na.rm = TRUE)
+    pad <- max(0.25, diff(rng) * 0.08)
+    xlim <- c(rng[1] - pad, rng[2] + pad)
+    graphics::plot(
+        xlim,
+        c(0, 1),
+        type = "n",
+        yaxt = "n",
+        ylab = "",
+        xlab = title,
+        main = title,
+        bty = "l"
+    )
+    graphics::axis(1)
+
+    d <- tryCatch(stats::density(x, from = xlim[1], to = xlim[2], adjust = 1.15), error = function(e) NULL)
+    if (!is.null(d) && max(d$y, na.rm = TRUE) > 0) {
+        height <- d$y / max(d$y, na.rm = TRUE) * 0.34
+        base <- 0.68
+        graphics::polygon(
+            c(d$x, rev(d$x)),
+            c(rep(base, length(d$x)), rev(base + height)),
+            col = "#C6DBEF",
+            border = "#303030"
+        )
+    }
+
+    set.seed(271828)
+    jitter_y <- stats::runif(length(x), min = 0.37, max = 0.58)
+    jitter_x <- jitter(x, amount = max(0.03, diff(xlim) * 0.004))
+    graphics::points(jitter_x, jitter_y, pch = 16, cex = 0.55, col = grDevices::adjustcolor("#2C7BE5", alpha.f = 0.55))
+
+    stats <- grDevices::boxplot.stats(x)$stats
+    box_y0 <- 0.39
+    box_y1 <- 0.52
+    mid_y <- mean(c(box_y0, box_y1))
+    graphics::segments(stats[1], mid_y, stats[2], mid_y, col = "#555555")
+    graphics::segments(stats[4], mid_y, stats[5], mid_y, col = "#555555")
+    graphics::rect(stats[2], box_y0, stats[4], box_y1, border = "#303030", col = grDevices::adjustcolor("#FFFFFF", alpha.f = 0.25))
+    graphics::segments(stats[3], box_y0, stats[3], box_y1, lwd = 2, col = "#303030")
+    graphics::segments(stats[1], box_y0 + 0.03, stats[1], box_y1 - 0.03, col = "#555555")
+    graphics::segments(stats[5], box_y0 + 0.03, stats[5], box_y1 - 0.03, col = "#555555")
 }
 
 .da_plot_numeric_values_with_na <- function(x) {

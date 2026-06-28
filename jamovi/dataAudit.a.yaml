@@ -46,6 +46,18 @@ options:
     - { name: includeGraphs, title: Include graphs, type: Bool, default: false }
     - { name: includeAssumptions, title: Include assumption checks, type: Bool, default: false }
     - { name: includeSummary, title: Include plain-English summary, type: Bool, default: true }
+    - { name: includeAuditScore, title: Include traffic-light audit score, type: Bool, default: true }
+    - { name: includeChecklist, title: Include screening checklist, type: Bool, default: true }
+    - { name: includeExportCodebook, title: Include exportable codebook, type: Bool, default: true }
+    - { name: includeRangeRules, title: Apply out-of-range rules, type: Bool, default: false }
+    - { name: includeDuplicateReview, title: Include duplicate case review, type: Bool, default: true }
+    - { name: includeSurveyChecks, title: Include survey response checks, type: Bool, default: false }
+    - { name: includeAttentionChecks, title: Include attention checks, type: Bool, default: false }
+    - { name: includeViolinPlots, title: Include violin plots, type: Bool, default: false }
+    - { name: includeNormalCurveHistograms, title: Add normal curves to histograms, type: Bool, default: false }
+    - { name: includeSurveyPlots, title: Include survey plots, type: Bool, default: false }
+    - { name: rangeRules, title: Range rules, type: String, default: "" }
+    - { name: screeningDesign, title: Screening design, type: String, default: "ungrouped" }
 
     - { name: normalityChecks, title: Normality checks, type: Bool, default: true }
     - { name: outlierChecks, title: Outlier checks, type: Bool, default: true }
@@ -61,7 +73,7 @@ options:
     - { name: vifWarning, title: VIF warning threshold, type: Number, min: 1, default: 5 }
     - { name: vifSerious, title: VIF serious threshold, type: Number, min: 1, default: 10 }
     - { name: skewThreshold, title: Skewness warning threshold, type: Number, min: 0, default: 1 }
-    - { name: kurtosisThreshold, title: Kurtosis warning threshold, type: Number, min: 0, default: 1 }
+    - { name: kurtosisThreshold, title: Kurtosis warning threshold, type: Number, min: 0, default: 2 }
     - { name: maxCaseRows, title: Maximum missing-case rows to show, type: Integer, min: 1, default: 50 }
     - { name: graphMaxVars, title: Maximum variables per graph panel, type: Integer, min: 1, max: 24, default: 9 }
     - { name: graphTopCategories, title: Maximum categories per categorical graph, type: Integer, min: 2, max: 30, default: 12 }

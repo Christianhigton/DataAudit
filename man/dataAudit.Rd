@@ -22,6 +22,20 @@ dataAudit(
   includeGraphs = FALSE,
   includeAssumptions = FALSE,
   includeSummary = TRUE,
+  includeAuditScore = TRUE,
+  includeChecklist = TRUE,
+  includeExportCodebook = TRUE,
+  includeRangeRules = FALSE,
+  includeDuplicateReview = TRUE,
+  includeSurveyChecks = FALSE,
+  includeAttentionChecks = FALSE,
+  includeReferences = TRUE,
+  includeViolinPlots = FALSE,
+  includeNormalCurveHistograms = FALSE,
+  includeSurveyPlots = FALSE,
+  userNotes = "",
+  rangeRules = "",
+  screeningDesign = "ungrouped",
   normalityChecks = TRUE,
   outlierChecks = TRUE,
   homogeneityChecks = FALSE,
@@ -48,21 +62,32 @@ dataAudit(
 \item{predictors}{Optional predictor variables for selected assumption checks.}
 \item{group}{Optional grouping variable for Levene's test.}
 \item{caseID}{Optional case identifier for case-level missingness and outlier output.}
-\item{includeOverview, includeDictionary, includeMissing, includeQuality, includeDescriptives, includeFrequencies, includeGraphs, includeAssumptions, includeSummary}{Logical switches controlling report sections.}
+\item{includeOverview, includeDictionary, includeMissing, includeQuality, includeDescriptives, includeFrequencies, includeGraphs, includeAssumptions, includeSummary, includeAuditScore, includeChecklist, includeExportCodebook, includeRangeRules, includeDuplicateReview, includeSurveyChecks, includeAttentionChecks, includeReferences}{Logical switches controlling report sections.}
+\item{includeViolinPlots, includeNormalCurveHistograms, includeSurveyPlots}{Logical switches controlling optional graph displays.}
+\item{userNotes}{Optional user notes to print with the analysis timestamp.}
+\item{rangeRules}{Optional range rules such as \code{age=18:100} or \code{likert_1=1:5}. Separate multiple rules with new lines or semicolons.}
+\item{screeningDesign}{Screening design label, typically \code{"ungrouped"} or \code{"grouped"}.}
 \item{normalityChecks, outlierChecks, homogeneityChecks, linearityChecks, multicollinearityChecks}{Logical switches controlling assumption-screening sections.}
 \item{highMissing, moderateMissing, smallCategoryN, zThreshold, iqrMultiplier, vifWarning, vifSerious, skewThreshold, kurtosisThreshold, maxCaseRows, graphMaxVars, graphTopCategories}{Editable screening thresholds and display limits.}
 }
 \value{
-A jamovi results object containing overview, dictionary, missingness,
-data-quality, descriptives, frequency, assumption-screening, and summary
-outputs depending on the selected options.
+A jamovi results object containing overview, traffic-light score, screening
+checklist, notes, references, compact dictionary, exportable codebook, missingness,
+data-quality, range-rule, duplicate, survey-response, attention-check, metadata, descriptive,
+frequency, graph, assumption-screening, and summary outputs depending on the
+selected options.
 }
 \description{
 Produces a teaching-friendly data audit and codebook for jamovi datasets.
 The analysis infers variable roles from data values, reports missingness,
-flags common data-quality issues, and optionally screens normality, outliers,
-homogeneity of variance, linearity, and multicollinearity. Optional graphs
-include missingness bars, numeric histograms, numeric boxplots, categorical
-bar charts, and a numeric correlation heatmap.
+flags common data-quality issues, and optionally screens missing-data
+patterns, duplicate cases, out-of-range rules, survey response patterns,
+attention-check flags such as B-lining/straight-lining,
+normality, outliers, homogeneity of variance, linearity, and
+multicollinearity. Optional graphs include missingness bars, numeric
+histograms with optional normal curves, violin plots, numeric boxplots,
+categorical bar charts, survey raincloud plots, and a numeric correlation
+heatmap. The on-screen variable dictionary is compact; the exportable
+codebook keeps the wider range/category, metadata, warning, and action fields.
 }
 \keyword{datasets}

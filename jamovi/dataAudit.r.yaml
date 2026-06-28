@@ -3,15 +3,58 @@ name: dataAudit
 title: Data Audit and Codebook
 jrs: '1.1'
 items:
+  - name: moduleRefs
+    title: References
+    type: Html
+
   - name: summary
     title: Plain-English Summary
     type: Html
     visible: (includeSummary)
+    refs:
+      - dataaudit
+      - tabachnick_fidell
+
+  - name: auditScore
+    title: Traffic-Light Audit Score
+    type: Table
+    visible: (includeAuditScore)
+    clearWith:
+      - vars
+      - highMissing
+      - moderateMissing
+      - zThreshold
+      - iqrMultiplier
+      - includeAssumptions
+    columns:
+      - { name: domain, title: Domain, type: text }
+      - { name: status, title: Status, type: text }
+      - { name: evidence, title: Evidence, type: text }
+      - { name: recommendedAction, title: Recommended action, type: text }
+
+  - name: screeningChecklist
+    title: Data-Screening Checklist
+    type: Table
+    visible: (includeChecklist)
+    clearWith:
+      - vars
+      - screeningDesign
+      - includeAssumptions
+      - group
+      - predictors
+    columns:
+      - { name: step, title: Step, type: text }
+      - { name: status, title: Status, type: text }
+      - { name: check, title: What was checked, type: text }
+      - { name: nextAction, title: Next action, type: text }
 
   - name: overview
     title: Dataset Overview
     type: Table
     visible: (includeOverview)
+    refs:
+      - dataaudit
+      - tabachnick_fidell
     clearWith:
       - vars
       - moderateMissing
@@ -21,7 +64,7 @@ items:
       - { name: value, title: Value, type: text }
 
   - name: dictionary
-    title: Variable Dictionary / Codebook
+    title: Variable Dictionary / Codebook (Compact)
     type: Table
     visible: (includeDictionary)
     clearWith:
@@ -31,17 +74,30 @@ items:
     columns:
       - { name: variable, title: Variable name, type: text }
       - { name: label, title: Variable label, type: text }
-      - { name: jtype, title: jamovi variable type, type: text }
-      - { name: measure, title: jamovi measurement level, type: text }
       - { name: inferred, title: Inferred variable type, type: text }
-      - { name: valid, title: Valid cases, type: integer }
       - { name: missing, title: Missing, type: integer }
       - { name: missingPct, title: Missing %, type: number }
       - { name: unique, title: Unique valid values, type: integer }
-      - { name: min, title: Minimum, type: number }
-      - { name: max, title: Maximum, type: number }
-      - { name: examples, title: Example values/categories, type: text }
-      - { name: flag, title: Flag/warning, type: text }
+      - { name: recommendedAction, title: Recommended action, type: text }
+
+  - name: exportCodebook
+    title: Exportable Codebook
+    type: Table
+    visible: (includeExportCodebook)
+    clearWith:
+      - vars
+      - moderateMissing
+      - highMissing
+    columns:
+      - { name: variable, title: Variable, type: text }
+      - { name: label, title: Label, type: text }
+      - { name: type, title: Type, type: text }
+      - { name: measure, title: Measurement level, type: text }
+      - { name: missing, title: Missing, type: integer }
+      - { name: missingPct, title: Missing %, type: number }
+      - { name: validRangeCategories, title: Valid range/categories, type: text }
+      - { name: warnings, title: Warnings, type: text }
+      - { name: recommendedAction, title: Recommended action, type: text }
 
   - name: missingByVariable
     title: Missing Data by Variable
@@ -78,6 +134,19 @@ items:
     type: Html
     visible: (includeMissing)
 
+  - name: missingPatterns
+    title: Missing-Data Patterns
+    type: Table
+    visible: (includeMissing)
+    clearWith:
+      - vars
+      - maxCaseRows
+    columns:
+      - { name: pattern, title: Missing variables pattern, type: text }
+      - { name: n, title: Cases, type: integer }
+      - { name: percent, title: Percent of rows, type: number }
+      - { name: rows, title: Example row numbers, type: text }
+
   - name: quality
     title: Data-Quality Flags
     type: Table
@@ -92,6 +161,78 @@ items:
       - { name: details, title: Details, type: text }
       - { name: severity, title: Severity, type: text }
       - { name: action, title: Suggested action, type: text }
+
+  - name: rangeRuleFlags
+    title: Out-of-Range Rule Flags
+    type: Table
+    visible: (includeRangeRules)
+    clearWith:
+      - vars
+      - rangeRules
+      - caseID
+    columns:
+      - { name: variable, title: Variable, type: text }
+      - { name: validRange, title: Valid range / allowed values, type: text }
+      - { name: observedRange, title: Observed range in data, type: text }
+      - { name: rows, title: Row numbers / case IDs, type: text }
+      - { name: outOfRangeValues, title: Out-of-range values found, type: text }
+      - { name: n, title: Flagged n, type: integer }
+      - { name: action, title: Recommended action, type: text }
+
+  - name: duplicateReview
+    title: Duplicate Case Review
+    type: Table
+    visible: (includeDuplicateReview)
+    clearWith:
+      - vars
+      - caseID
+    columns:
+      - { name: issue, title: Issue, type: text }
+      - { name: rows, title: Row numbers / case IDs, type: text }
+      - { name: n, title: Count, type: integer }
+      - { name: details, title: Details, type: text }
+      - { name: action, title: Recommended action, type: text }
+
+  - name: surveyResponseFlags
+    title: Survey Response Pattern Flags
+    type: Table
+    visible: (includeSurveyChecks)
+    clearWith:
+      - vars
+      - caseID
+    columns:
+      - { name: row, title: Row number / case ID, type: text }
+      - { name: issue, title: Issue, type: text }
+      - { name: variables, title: Variables checked, type: text }
+      - { name: details, title: Details, type: text }
+      - { name: action, title: Recommended action, type: text }
+
+  - name: attentionCheckFlags
+    title: Attention Check Flags
+    type: Table
+    visible: (includeAttentionChecks)
+    clearWith:
+      - vars
+      - caseID
+    columns:
+      - { name: row, title: Row number / case ID, type: text }
+      - { name: issue, title: Attention-check issue, type: text }
+      - { name: variables, title: Variables checked, type: text }
+      - { name: details, title: Details, type: text }
+      - { name: action, title: Recommended action, type: text }
+
+  - name: metadataSuggestions
+    title: jamovi Metadata Repair Suggestions
+    type: Table
+    visible: (includeQuality)
+    clearWith:
+      - vars
+    columns:
+      - { name: variable, title: Variable, type: text }
+      - { name: currentMeasure, title: Current measurement level, type: text }
+      - { name: inferredType, title: Inferred type, type: text }
+      - { name: suggestion, title: Suggested repair, type: text }
+      - { name: reason, title: Reason, type: text }
 
   - name: descriptives
     title: Descriptives for Continuous and Integer Variables
@@ -142,9 +283,21 @@ items:
     clearWith:
       - vars
       - graphMaxVars
+      - includeNormalCurveHistograms
     width: 720
     height: 560
     renderFun: .numericPlot
+
+  - name: violinPlot
+    title: Numeric Violin Plots
+    type: Image
+    visible: (includeGraphs && includeViolinPlots)
+    clearWith:
+      - vars
+      - graphMaxVars
+    width: 720
+    height: 560
+    renderFun: .violinPlot
 
   - name: boxPlot
     title: Numeric Boxplots
@@ -168,6 +321,17 @@ items:
     width: 720
     height: 560
     renderFun: .categoricalPlot
+
+  - name: surveyPlot
+    title: Survey Raincloud Plots
+    type: Image
+    visible: (includeGraphs && includeSurveyPlots)
+    clearWith:
+      - vars
+      - graphMaxVars
+    width: 760
+    height: 560
+    renderFun: .surveyPlot
 
   - name: correlationPlot
     title: Correlation Heatmap
