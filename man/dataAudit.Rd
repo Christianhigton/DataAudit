@@ -29,11 +29,9 @@ dataAudit(
   includeDuplicateReview = TRUE,
   includeSurveyChecks = FALSE,
   includeAttentionChecks = FALSE,
-  includeReferences = TRUE,
   includeViolinPlots = FALSE,
   includeNormalCurveHistograms = FALSE,
   includeSurveyPlots = FALSE,
-  userNotes = "",
   rangeRules = "",
   screeningDesign = "ungrouped",
   normalityChecks = TRUE,
@@ -49,7 +47,7 @@ dataAudit(
   vifWarning = 5,
   vifSerious = 10,
   skewThreshold = 1,
-  kurtosisThreshold = 1,
+  kurtosisThreshold = 2,
   maxCaseRows = 50,
   graphMaxVars = 9,
   graphTopCategories = 12
@@ -62,9 +60,8 @@ dataAudit(
 \item{predictors}{Optional predictor variables for selected assumption checks.}
 \item{group}{Optional grouping variable for Levene's test.}
 \item{caseID}{Optional case identifier for case-level missingness and outlier output.}
-\item{includeOverview, includeDictionary, includeMissing, includeQuality, includeDescriptives, includeFrequencies, includeGraphs, includeAssumptions, includeSummary, includeAuditScore, includeChecklist, includeExportCodebook, includeRangeRules, includeDuplicateReview, includeSurveyChecks, includeAttentionChecks, includeReferences}{Logical switches controlling report sections.}
+\item{includeOverview, includeDictionary, includeMissing, includeQuality, includeDescriptives, includeFrequencies, includeGraphs, includeAssumptions, includeSummary, includeAuditScore, includeChecklist, includeExportCodebook, includeRangeRules, includeDuplicateReview, includeSurveyChecks, includeAttentionChecks}{Logical switches controlling report sections.}
 \item{includeViolinPlots, includeNormalCurveHistograms, includeSurveyPlots}{Logical switches controlling optional graph displays.}
-\item{userNotes}{Optional user notes to print with the analysis timestamp.}
 \item{rangeRules}{Optional range rules such as \code{age=18:100} or \code{likert_1=1:5}. Separate multiple rules with new lines or semicolons.}
 \item{screeningDesign}{Screening design label, typically \code{"ungrouped"} or \code{"grouped"}.}
 \item{normalityChecks, outlierChecks, homogeneityChecks, linearityChecks, multicollinearityChecks}{Logical switches controlling assumption-screening sections.}
@@ -81,7 +78,8 @@ selected options.
 Produces a teaching-friendly data audit and codebook for jamovi datasets.
 The analysis infers variable roles from data values, reports missingness,
 flags common data-quality issues, and optionally screens missing-data
-patterns, duplicate cases, out-of-range rules, survey response patterns,
+patterns, applies Little's MCAR test to usable numeric variables, visualises
+missingness, and screens duplicate cases, out-of-range rules, survey response patterns,
 attention-check flags such as B-lining/straight-lining,
 normality, outliers, homogeneity of variance, linearity, and
 multicollinearity. Optional graphs include missingness bars, numeric

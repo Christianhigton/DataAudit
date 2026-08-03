@@ -394,6 +394,7 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
         missingByCase = function() private$.items[["missingByCase"]],
         missingText = function() private$.items[["missingText"]],
         missingPatterns = function() private$.items[["missingPatterns"]],
+        littleMCAR = function() private$.items[["littleMCAR"]],
         quality = function() private$.items[["quality"]],
         rangeRuleFlags = function() private$.items[["rangeRuleFlags"]],
         duplicateReview = function() private$.items[["duplicateReview"]],
@@ -403,6 +404,7 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
         descriptives = function() private$.items[["descriptives"]],
         frequencies = function() private$.items[["frequencies"]],
         missingPlot = function() private$.items[["missingPlot"]],
+        missingPatternPlot = function() private$.items[["missingPatternPlot"]],
         numericPlot = function() private$.items[["numericPlot"]],
         violinPlot = function() private$.items[["violinPlot"]],
         boxPlot = function() private$.items[["boxPlot"]],
@@ -688,6 +690,39 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
+                name="littleMCAR",
+                title="Little's MCAR Test",
+                visible="(includeMissing)",
+                clearWith=list(
+                    "vars"),
+                columns=list(
+                    list(
+                        `name`="chiSquare",
+                        `title`="\u03C7\u00B2",
+                        `type`="number"),
+                    list(
+                        `name`="df",
+                        `title`="df",
+                        `type`="integer"),
+                    list(
+                        `name`="p",
+                        `title`="p",
+                        `type`="number",
+                        `format`="zto,pvalue"),
+                    list(
+                        `name`="n",
+                        `title`="Cases used",
+                        `type`="integer"),
+                    list(
+                        `name`="variables",
+                        `title`="Numeric variables",
+                        `type`="integer"),
+                    list(
+                        `name`="interpretation",
+                        `title`="Interpretation",
+                        `type`="text"))))
+            self$add(jmvcore::Table$new(
+                options=options,
                 name="quality",
                 title="Data-Quality Flags",
                 visible="(includeQuality)",
@@ -949,13 +984,25 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                 options=options,
                 name="missingPlot",
                 title="Missing Data Plot",
-                visible="(includeGraphs)",
+                visible="(includeMissing)",
                 clearWith=list(
                     "vars",
-                    "graphMaxVars"),
+                    "graphMaxVars",
+                    "moderateMissing",
+                    "highMissing"),
                 width=650,
                 height=420,
                 renderFun=".missingPlot"))
+            self$add(jmvcore::Image$new(
+                options=options,
+                name="missingPatternPlot",
+                title="Missing Data Pattern Chart",
+                visible="(includeMissing)",
+                clearWith=list(
+                    "vars"),
+                width=800,
+                height=520,
+                renderFun=".missingPatternPlot"))
             self$add(jmvcore::Image$new(
                 options=options,
                 name="numericPlot",
@@ -1304,6 +1351,7 @@ dataAuditBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 #'   \code{results$missingByCase} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$missingText} \tab \tab \tab \tab \tab a html \cr
 #'   \code{results$missingPatterns} \tab \tab \tab \tab \tab a table \cr
+#'   \code{results$littleMCAR} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$quality} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$rangeRuleFlags} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$duplicateReview} \tab \tab \tab \tab \tab a table \cr
@@ -1313,6 +1361,7 @@ dataAuditBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 #'   \code{results$descriptives} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$frequencies} \tab \tab \tab \tab \tab a table \cr
 #'   \code{results$missingPlot} \tab \tab \tab \tab \tab an image \cr
+#'   \code{results$missingPatternPlot} \tab \tab \tab \tab \tab an image \cr
 #'   \code{results$numericPlot} \tab \tab \tab \tab \tab an image \cr
 #'   \code{results$violinPlot} \tab \tab \tab \tab \tab an image \cr
 #'   \code{results$boxPlot} \tab \tab \tab \tab \tab an image \cr
@@ -1451,4 +1500,3 @@ dataAudit <- function(
 
     analysis$results
 }
-

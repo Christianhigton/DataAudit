@@ -147,6 +147,23 @@ items:
       - { name: percent, title: Percent of rows, type: number }
       - { name: rows, title: Example row numbers, type: text }
 
+  - name: littleMCAR
+    title: Little's MCAR Test
+    type: Table
+    visible: (includeMissing)
+    clearWith:
+      - vars
+    columns:
+      - { name: chiSquare, title: χ², type: number }
+      - { name: df, title: df, type: integer }
+      - name: p
+        title: p
+        type: number
+        format: zto,pvalue
+      - { name: n, title: Cases used, type: integer }
+      - { name: variables, title: Numeric variables, type: integer }
+      - { name: interpretation, title: Interpretation, type: text }
+
   - name: quality
     title: Data-Quality Flags
     type: Table
@@ -268,13 +285,25 @@ items:
   - name: missingPlot
     title: Missing Data Plot
     type: Image
-    visible: (includeGraphs)
+    visible: (includeMissing)
     clearWith:
       - vars
       - graphMaxVars
+      - moderateMissing
+      - highMissing
     width: 650
     height: 420
     renderFun: .missingPlot
+
+  - name: missingPatternPlot
+    title: Missing Data Pattern Chart
+    type: Image
+    visible: (includeMissing)
+    clearWith:
+      - vars
+    width: 800
+    height: 520
+    renderFun: .missingPatternPlot
 
   - name: numericPlot
     title: Numeric Histograms

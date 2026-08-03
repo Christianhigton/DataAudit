@@ -3,13 +3,13 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
     inherit = dataAuditBase,
     private = list(
         .run = function() {
-            self$results$moduleRefs$setContent(
+            self$results$moduleRefs$setContent(paste0(
                 "<div style=\"font-family:sans-serif;font-size:0.9em;color:#555;line-height:1.5\">",
                 "<p><strong>Higton, C. (2025).</strong> <em>DataAudit: Data audit and codebook for jamovi</em> (Version 0.1.1) [jamovi module].</p>",
                 "<p><strong>Tabachnick, B. G., &amp; Fidell, L. S. (2019).</strong> <em>Using Multivariate Statistics</em> (7th ed.). Pearson.</p>",
                 "<p style=\"font-size:0.85em;color:#777\">See also: jamovi project (2025). <em>jamovi</em> (Version 2.x) [Computer Software]. Retrieved from https://www.jamovi.org</p>",
                 "</div>"
-            )
+            ))
 
             data <- as.data.frame(self$data, stringsAsFactors = FALSE)
             opts <- self$options
@@ -61,7 +61,11 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
                 .da_add_rows(self$results$missingByVariable, missing)
                 .da_add_rows(self$results$missingByCase, missing_case)
                 .da_add_rows(self$results$missingPatterns, .da_missing_patterns(data, vars, opts$maxCaseRows))
+                .da_add_rows(self$results$littleMCAR, .da_little_mcar(data, vars, audit$dictionary))
                 self$results$missingText$setContent(.da_missing_text_html(data, vars, missing))
+                missing_plot_state <- .da_plot_state(data, vars, audit$dictionary, opts)
+                self$results$missingPlot$setState(missing_plot_state)
+                self$results$missingPatternPlot$setState(missing_plot_state)
             }
 
             if (opts$includeQuality) {
@@ -89,7 +93,6 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
 
             if (opts$includeGraphs) {
                 plot_state <- .da_plot_state(data, vars, audit$dictionary, opts)
-                self$results$missingPlot$setState(plot_state)
                 self$results$numericPlot$setState(plot_state)
                 self$results$boxPlot$setState(plot_state)
                 self$results$categoricalPlot$setState(plot_state)
@@ -117,6 +120,9 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
         },
         .missingPlot = function(image, ...) {
             .da_render_missing_plot(image$state)
+        },
+        .missingPatternPlot = function(image, ...) {
+            .da_render_missing_pattern_plot(image$state)
         },
         .numericPlot = function(image, ...) {
             .da_render_numeric_plot(image$state)
@@ -637,6 +643,172 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
     do.call(rbind.data.frame, rows)
 }
 
+# Little's chi-square test of the MCAR assumption for numeric variables. The
+# multivariate-normal mean and covariance are estimated by EM so incomplete
+# rows contribute to the test rather than being discarded.
+.da_little_mcar <- function(data, vars, dictionary) {
+    empty_result <- function(message, n = nrow(data), variables = 0L) {
+        data.frame(
+            chiSquare = NA_real_, df = NA_integer_, p = NA_real_, n = as.integer(n),
+            variables = as.integer(variables), interpretation = message,
+            stringsAsFactors = FALSE
+        )
+    }
+
+    numeric_vars <- vars[vapply(vars, function(v) {
+        z <- data[[v]]
+        if (inherits(z, c("Date", "POSIXct", "POSIXt")))
+            return(FALSE)
+        valid <- sum(!is.na(z))
+        valid > 0L && length(.da_numeric_values(z)) == valid
+    }, logical(1))]
+    # Unique-valued numeric measurements can be conservatively inferred as IDs
+    # elsewhere in the audit. Exclude them here only when their name also looks
+    # like an identifier, so ordinary continuous outcomes remain testable.
+    id_like <- grepl("(^|[_. -])(id|identifier|case[_. -]*(id|number|no))($|[_. -])", numeric_vars, ignore.case = TRUE)
+    numeric_vars <- numeric_vars[!id_like]
+    if (length(numeric_vars) < 2L)
+        return(empty_result("Little's test requires at least two numeric variables.", variables = length(numeric_vars)))
+
+    x <- as.data.frame(lapply(data[, numeric_vars, drop = FALSE], function(z) {
+        suppressWarnings(as.numeric(as.character(z)))
+    }))
+    keep_rows <- rowSums(!is.na(x)) > 0L
+    x <- as.matrix(x[keep_rows, , drop = FALSE])
+    n <- nrow(x)
+    p <- ncol(x)
+    if (n < 3L || !anyNA(x))
+        return(empty_result(if (anyNA(x)) "Too few usable cases for Little's test." else "No missing numeric values; Little's test is not needed.", n, p))
+
+    keep_cols <- colSums(!is.na(x)) >= 2L
+    x <- x[, keep_cols, drop = FALSE]
+    p <- ncol(x)
+    if (p < 2L)
+        return(empty_result("Too few numeric variables with usable observations for Little's test.", n, p))
+
+    center <- colMeans(x, na.rm = TRUE)
+    scale <- vapply(seq_len(p), function(j) stats::sd(x[, j], na.rm = TRUE), numeric(1))
+    keep_cols <- is.finite(scale) & scale > 0
+    x <- x[, keep_cols, drop = FALSE]
+    center <- center[keep_cols]
+    scale <- scale[keep_cols]
+    p <- ncol(x)
+    if (p < 2L)
+        return(empty_result("Little's test needs at least two non-constant numeric variables.", n, p))
+    x <- sweep(sweep(x, 2L, center, "-"), 2L, scale, "/")
+
+    em <- .da_mvn_em(x)
+    if (!isTRUE(em$converged))
+        return(empty_result("Little's test could not be estimated reliably for these data.", n, p))
+
+    observed <- !is.na(x)
+    pattern_key <- apply(observed, 1L, paste0, collapse = "")
+    patterns <- split(seq_len(n), pattern_key)
+    statistic <- 0
+    df_sum <- 0L
+    usable_patterns <- 0L
+    for (idx in patterns) {
+        obs <- which(observed[idx[1L], ])
+        if (length(obs) == 0L)
+            next
+        pattern_mean <- colMeans(x[idx, obs, drop = FALSE])
+        delta <- pattern_mean - em$mean[obs]
+        inv <- .da_safe_inverse(em$sigma[obs, obs, drop = FALSE])
+        if (is.null(inv))
+            next
+        statistic <- statistic + length(idx) * drop(t(delta) %*% inv %*% delta)
+        df_sum <- df_sum + length(obs)
+        usable_patterns <- usable_patterns + 1L
+    }
+    df <- as.integer(df_sum - p)
+    if (!is.finite(statistic) || df <= 0L || usable_patterns < 2L)
+        return(empty_result("There are not enough distinct estimable missing-data patterns for Little's test.", n, p))
+
+    p_value <- stats::pchisq(statistic, df = df, lower.tail = FALSE)
+    interpretation <- if (p_value < .05) {
+        "Evidence against MCAR (p < .05); investigate the missingness mechanism and consider sensitivity analyses."
+    } else {
+        "No evidence against MCAR (p >= .05); this does not prove that data are MCAR."
+    }
+    data.frame(
+        chiSquare = statistic, df = df, p = p_value, n = n,
+        variables = p, interpretation = interpretation, stringsAsFactors = FALSE
+    )
+}
+
+.da_safe_inverse <- function(x, tolerance = 1e-10) {
+    x <- as.matrix(x)
+    if (nrow(x) == 1L) {
+        if (!is.finite(x[1L, 1L]) || x[1L, 1L] <= tolerance)
+            return(NULL)
+        return(matrix(1 / x[1L, 1L], 1L, 1L))
+    }
+    out <- tryCatch(solve(x), error = function(e) NULL)
+    if (!is.null(out) && all(is.finite(out)))
+        return(out)
+    eig <- tryCatch(eigen((x + t(x)) / 2, symmetric = TRUE), error = function(e) NULL)
+    if (is.null(eig) || max(eig$values) <= 0)
+        return(NULL)
+    keep <- eig$values > max(eig$values) * tolerance
+    if (!any(keep))
+        return(NULL)
+    tcrossprod(sweep(eig$vectors[, keep, drop = FALSE], 2L, sqrt(eig$values[keep]), "/"))
+}
+
+.da_mvn_em <- function(x, max_iter = 200L, tolerance = 1e-7) {
+    n <- nrow(x)
+    p <- ncol(x)
+    mu <- colMeans(x, na.rm = TRUE)
+    filled <- x
+    for (j in seq_len(p))
+        filled[is.na(filled[, j]), j] <- mu[j]
+    sigma <- stats::cov(filled)
+    if (p == 1L)
+        sigma <- matrix(sigma, 1L, 1L)
+    sigma <- sigma + diag(1e-6, p)
+    patterns <- split(seq_len(n), apply(!is.na(x), 1L, paste0, collapse = ""))
+
+    for (iteration in seq_len(max_iter)) {
+        sum_x <- numeric(p)
+        sum_xx <- matrix(0, p, p)
+        ok <- TRUE
+        for (idx in patterns) {
+            obs <- which(!is.na(x[idx[1L], ]))
+            mis <- setdiff(seq_len(p), obs)
+            for (i in idx) {
+                expected <- numeric(p)
+                expected[obs] <- x[i, obs]
+                conditional_cov <- matrix(0, p, p)
+                if (length(mis) > 0L) {
+                    inv <- .da_safe_inverse(sigma[obs, obs, drop = FALSE])
+                    if (is.null(inv)) {
+                        ok <- FALSE
+                        break
+                    }
+                    beta <- sigma[mis, obs, drop = FALSE] %*% inv
+                    expected[mis] <- mu[mis] + drop(beta %*% (x[i, obs] - mu[obs]))
+                    conditional_cov[mis, mis] <- sigma[mis, mis, drop = FALSE] - beta %*% sigma[obs, mis, drop = FALSE]
+                }
+                sum_x <- sum_x + expected
+                sum_xx <- sum_xx + tcrossprod(expected) + conditional_cov
+            }
+            if (!ok)
+                break
+        }
+        if (!ok)
+            return(list(converged = FALSE))
+        new_mu <- sum_x / n
+        new_sigma <- sum_xx / n - tcrossprod(new_mu)
+        new_sigma <- (new_sigma + t(new_sigma)) / 2 + diag(1e-8, p)
+        change <- max(abs(new_mu - mu), abs(new_sigma - sigma))
+        mu <- new_mu
+        sigma <- new_sigma
+        if (is.finite(change) && change < tolerance)
+            return(list(mean = mu, sigma = sigma, converged = TRUE))
+    }
+    list(mean = mu, sigma = sigma, converged = FALSE)
+}
+
 .da_parse_range_rules <- function(text, names) {
     text <- as.character(text %||% "")
     parts <- unlist(strsplit(text, "[\n;]+"))
@@ -1105,7 +1277,7 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
 
 .da_truncate <- function(x, n = 90L) {
     x <- as.character(x)
-    ifelse(nchar(x) > n, paste0(substr(x, 1L, n - 1L), "…"), x)
+    ifelse(nchar(x) > n, paste0(substr(x, 1L, n - 1L), "\u2026"), x)
 }
 
 .da_mean <- function(x) if (length(x) > 0L) mean(x) else NA_real_
@@ -1138,6 +1310,8 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
         dictionary = dictionary,
         graphMaxVars = opts$graphMaxVars %||% 9L,
         graphTopCategories = opts$graphTopCategories %||% 12L,
+        moderateMissing = opts$moderateMissing %||% 5,
+        highMissing = opts$highMissing %||% 20,
         includeNormalCurveHistograms = isTRUE(opts$includeNormalCurveHistograms)
     )
 }
@@ -1195,19 +1369,78 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
     old <- graphics::par(no.readonly = TRUE)
     on.exit(graphics::par(old), add = TRUE)
     graphics::par(mar = c(4, 9, 3, 2))
-    graphics::barplot(
+    colours <- ifelse(values >= state$highMissing, "#C0392B", ifelse(values >= state$moderateMissing, "#E6A23C", "#6BAED6"))
+    positions <- graphics::barplot(
         rev(values),
         horiz = TRUE,
         names.arg = rev(labels),
         las = 1,
         xlab = "Missing data (%)",
-        col = "#6BAED6",
+        col = rev(colours),
         border = "#2B6C9E",
         main = "Variables with the most missing data",
         xlim = c(0, max(100, values, na.rm = TRUE))
     )
-    graphics::abline(v = c(5, 20), lty = 2, col = c("#E6A23C", "#C0392B"))
-    graphics::legend("bottomright", legend = c("5% moderate", "20% high"), lty = 2, col = c("#E6A23C", "#C0392B"), bty = "n", cex = 0.8)
+    graphics::text(rev(values), positions, labels = sprintf(" %.1f%%", rev(values)), pos = 4, cex = 0.8, xpd = NA)
+    graphics::abline(v = c(state$moderateMissing, state$highMissing), lty = 2, col = c("#E6A23C", "#C0392B"))
+    graphics::legend("bottomright", legend = c(sprintf("%.1f%% moderate", state$moderateMissing), sprintf("%.1f%% high", state$highMissing)), lty = 2, col = c("#E6A23C", "#C0392B"), bty = "n", cex = 0.8)
+    invisible(TRUE)
+}
+
+.da_render_missing_pattern_plot <- function(state) {
+    if (is.null(state))
+        return(.da_plot_message("No plot state is available."))
+    vars <- state$vars
+    if (length(vars) == 0L)
+        return(.da_plot_message("No variables are available for the missing-data pattern chart."))
+
+    missing <- is.na(state$data[, vars, drop = FALSE])
+    n_cases <- nrow(missing)
+    if (n_cases == 0L)
+        return(.da_plot_message("No cases are available for the missing-data pattern chart."))
+
+    keys <- apply(missing, 1L, function(row) paste0(as.integer(row), collapse = ""))
+    counts <- sort(table(keys), decreasing = TRUE)
+    pattern_keys <- names(counts)
+    pattern_matrix <- do.call(rbind, lapply(pattern_keys, function(key) {
+        as.integer(strsplit(key, "", fixed = TRUE)[[1L]])
+    }))
+    if (is.null(dim(pattern_matrix)))
+        pattern_matrix <- matrix(pattern_matrix, nrow = 1L)
+    colnames(pattern_matrix) <- vars
+    n_patterns <- nrow(pattern_matrix)
+    percentages <- 100 * as.numeric(counts) / n_cases
+    row_labels <- sprintf(
+        "Pattern %d \u2013 n=%d (%.1f%%)",
+        seq_len(n_patterns), as.integer(counts), percentages
+    )
+
+    old <- graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(old), add = TRUE)
+    left_margin <- min(20, max(8, max(nchar(row_labels)) * 0.55))
+    bottom_margin <- min(14, max(7, max(nchar(vars)) * 0.45))
+    graphics::par(mar = c(bottom_margin, left_margin, 4, 2), xpd = NA)
+
+    # image() draws bottom-up, so reverse the rows to keep Pattern 1 at top.
+    z <- t(pattern_matrix[n_patterns:1L, , drop = FALSE])
+    graphics::image(
+        x = seq_len(length(vars)), y = seq_len(n_patterns), z = z,
+        col = c("#F1F3F5", "#D95F59"), breaks = c(-0.5, 0.5, 1.5),
+        axes = FALSE, xlab = "", ylab = "", main = "Missing Data Pattern Chart",
+        useRaster = TRUE
+    )
+    graphics::axis(1, at = seq_along(vars), labels = vars, las = 2, tick = FALSE, cex.axis = 0.8)
+    graphics::axis(2, at = seq_len(n_patterns), labels = rev(row_labels), las = 1, tick = FALSE, cex.axis = 0.8)
+    if (length(vars) > 1L)
+        graphics::abline(v = seq(1.5, length(vars) - 0.5, by = 1), col = "white", lwd = 1)
+    if (n_patterns > 1L)
+        graphics::abline(h = seq(1.5, n_patterns - 0.5, by = 1), col = "white", lwd = 1)
+    graphics::box(col = "#D9DDE2")
+    graphics::legend(
+        "bottom", inset = c(0, -0.28), horiz = TRUE,
+        legend = c("Observed", "Missing"), fill = c("#F1F3F5", "#D95F59"),
+        border = c("#D9DDE2", "#D95F59"), bty = "n", xpd = NA, cex = 0.85
+    )
     invisible(TRUE)
 }
 
