@@ -1,0 +1,56 @@
+---
+name: multilevelReliability
+title: Multilevel Reliability
+jrs: '1.1'
+items:
+  - name: notes
+    title: Analysis Notes
+    type: Html
+
+  - name: structure
+    title: Data Structure
+    type: Table
+    visible: (includeStructure)
+    clearWith: [ items, cluster, time ]
+    columns:
+      - { name: measure, title: Measure, type: text }
+      - { name: value, title: Value, type: text }
+
+  - name: reliability
+    title: Multilevel McDonald's Omega
+    type: Table
+    visible: (includeOmega)
+    refs: [ geldhof2014, lavaan ]
+    clearWith: [ items, cluster, confidenceIntervals ]
+    columns:
+      - { name: level, title: Level, type: text }
+      - { name: omega, title: Omega, type: number }
+      - { name: se, title: SE, type: number }
+      - { name: lower, title: 95% CI lower, type: number }
+      - { name: upper, title: 95% CI upper, type: number }
+
+  - name: iccs
+    title: Variance Partitioning and ICCs
+    type: Table
+    visible: (includeICCs)
+    clearWith: [ items, cluster ]
+    columns:
+      - { name: measure, title: Measure, type: text }
+      - { name: withinVariance, title: Within-person variance, type: number }
+      - { name: betweenVariance, title: Between-person variance, type: number }
+      - { name: icc, title: ICC, type: number }
+
+  - name: interpretation
+    title: Interpretation and Audit Guidance
+    type: Html
+    visible: (includeInterpretation)
+
+  - name: modelDetails
+    title: Model Details
+    type: Table
+    visible: (includeModelDetails)
+    clearWith: [ items, cluster ]
+    columns:
+      - { name: measure, title: Measure, type: text }
+      - { name: value, title: Value, type: text }
+...

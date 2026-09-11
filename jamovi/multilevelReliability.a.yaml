@@ -1,0 +1,38 @@
+---
+name: multilevelReliability
+title: Multilevel Reliability
+menuGroup: DataAudit
+menuTitle: Multilevel Reliability
+version: '1.0.0'
+jas: '1.2'
+description:
+    main: >
+        Estimates reliability separately for within-person change and
+        between-person differences using a two-level confirmatory factor model.
+options:
+    - { name: data, type: Data }
+
+    - name: items
+      title: Items
+      type: Variables
+      default: []
+      suggested: [ continuous ]
+      permitted: [ numeric ]
+
+    - name: cluster
+      title: Cluster / Participant ID
+      type: Variable
+      default: null
+
+    - name: time
+      title: Time variable (optional)
+      type: Variable
+      default: null
+
+    - { name: includeOmega, title: Multilevel McDonald's omega, type: Bool, default: true }
+    - { name: confidenceIntervals, title: 95% confidence intervals, type: Bool, default: true }
+    - { name: includeICCs, title: ICCs and variance partitioning, type: Bool, default: true }
+    - { name: includeStructure, title: Data structure / cluster summary, type: Bool, default: true }
+    - { name: includeInterpretation, title: Interpretation / audit guidance, type: Bool, default: true }
+    - { name: includeModelDetails, title: Model details, type: Bool, default: false }
+...

@@ -1,0 +1,35 @@
+---
+name: multilevelReliability
+title: Multilevel Reliability
+jus: '2.0'
+stage: 0
+compilerMode: tame
+children:
+  - type: VariableSupplier
+    stretchFactor: 1
+    persistentItems: false
+    children:
+      - type: TargetLayoutBox
+        label: Items
+        children:
+          - { type: VariablesListBox, name: items, isTarget: true }
+      - type: TargetLayoutBox
+        label: Cluster / Participant ID
+        children:
+          - { type: VariablesListBox, name: cluster, maxItemCount: 1, isTarget: true }
+      - type: TargetLayoutBox
+        label: Time variable (optional)
+        children:
+          - { type: VariablesListBox, name: time, maxItemCount: 1, isTarget: true }
+
+  - type: CollapseBox
+    label: Output Options
+    collapsed: false
+    children:
+      - { type: CheckBox, name: includeOmega }
+      - { type: CheckBox, name: confidenceIntervals }
+      - { type: CheckBox, name: includeICCs }
+      - { type: CheckBox, name: includeStructure }
+      - { type: CheckBox, name: includeInterpretation }
+      - { type: CheckBox, name: includeModelDetails }
+...

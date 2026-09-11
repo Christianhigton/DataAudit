@@ -3,7 +3,7 @@ refs:
         type: software
         author: Higton, C.
         year: 2025
-        title: 'DataAudit: Data audit and codebook for jamovi (Version 0.1.1)'
+        title: 'DataAudit: Data audit and multilevel reliability tools for jamovi (Version 0.2.0)'
         publisher: '[jamovi module]'
     tabachnick_fidell:
         type: book
@@ -11,3 +11,15 @@ refs:
         year: 2019
         title: Using Multivariate Statistics (7th ed.)
         publisher: Pearson
+    geldhof2014:
+        type: article
+        author: Geldhof, G. J., Preacher, K. J., & Zyphur, M. J.
+        year: 2014
+        title: Reliability estimation in a multilevel confirmatory factor analysis framework
+        publisher: Psychological Methods, 19(1), 72-91
+    lavaan:
+        type: article
+        author: Rosseel, Y.
+        year: 2012
+        title: 'lavaan: An R package for structural equation modeling'
+        publisher: Journal of Statistical Software, 48(2), 1-36

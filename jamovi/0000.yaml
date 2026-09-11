@@ -1,17 +1,16 @@
 ---
 title: DataAudit
 name: DataAudit
-version: 0.1.1
+version: 0.2.0
 jms: '1.0'
 authors:
   - Christian Higton
 maintainer: Christian Higton <maintainer@example.com>
-date: '2026-06-24'
+date: '2026-09-11'
 type: R
 description: >
-  Teaching-friendly data audit and codebook for jamovi datasets, including type
-  inference, missing-data summaries, data-quality flags, descriptives, and
-  optional assumption screening.
+  Teaching-friendly data audit, codebook, data-quality screening, and multilevel
+  reliability analysis for repeated-measures datasets.
 analyses:
   - title: Data Audit and Codebook
     name: dataAudit
@@ -21,6 +20,15 @@ analyses:
     description: >
       Produces a teaching-friendly data audit, codebook, missing-data report,
       data-quality flags, descriptives, and optional assumption screening.
+    category: analyses
+  - title: Multilevel Reliability
+    name: multilevelReliability
+    ns: DataAudit
+    menuGroup: DataAudit
+    menuTitle: Multilevel Reliability
+    description: >
+      Estimates reliability separately for within-person change and
+      between-person differences using a two-level confirmatory factor model.
     category: analyses
 usesNative: true
 minApp: 1.0.8

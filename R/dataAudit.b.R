@@ -5,7 +5,7 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
         .run = function() {
             self$results$moduleRefs$setContent(paste0(
                 "<div style=\"font-family:sans-serif;font-size:0.9em;color:#555;line-height:1.5\">",
-                "<p><strong>Higton, C. (2025).</strong> <em>DataAudit: Data audit and codebook for jamovi</em> (Version 0.1.1) [jamovi module].</p>",
+                "<p><strong>Higton, C. (2025).</strong> <em>DataAudit: Data audit and multilevel reliability tools for jamovi</em> (Version 0.2.0) [jamovi module].</p>",
                 "<p><strong>Tabachnick, B. G., &amp; Fidell, L. S. (2019).</strong> <em>Using Multivariate Statistics</em> (7th ed.). Pearson.</p>",
                 "<p style=\"font-size:0.85em;color:#777\">See also: jamovi project (2025). <em>jamovi</em> (Version 2.x) [Computer Software]. Retrieved from https://www.jamovi.org</p>",
                 "</div>"

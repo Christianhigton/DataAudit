@@ -1,4 +1,5 @@
-^\\.gitignore$
-^\\.Rbuildignore$
+^\.gitignore$
+^\.git$
+^\.Rbuildignore$
 ^build$
-^.*\\.jmo$
+^.*\.jmo$

@@ -1,12 +1,15 @@
 Package: DataAudit
 Type: Package
-Title: Data Audit and Codebook for jamovi
-Version: 0.1.1
+Title: Data Audit and Multilevel Reliability Tools for jamovi
+Version: 0.2.0
 Author: Christian Higton
 Maintainer: Christian Higton <christian.higton@gmail.com>
 Description: Produces a teaching-friendly data audit and codebook for jamovi
     datasets, including variable type inference, missing-data summaries,
-    data-quality flags, descriptives, and optional assumption screening.
+    data-quality flags, descriptives, optional assumption screening, and
+    within-person and between-person reliability analysis.
 License: GPL (>= 2)
 Encoding: UTF-8
-Imports: jmvcore (>= 0.8.5), R6
+Imports: jmvcore (>= 0.8.5), lavaan (>= 0.6-15), R6
+Suggests: testthat (>= 3.0.0)
+Config/testthat/edition: 3
