@@ -5,7 +5,7 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
         .run = function() {
             self$results$moduleRefs$setContent(paste0(
                 "<div style=\"font-family:sans-serif;font-size:0.9em;color:#555;line-height:1.5\">",
-                "<p><strong>Higton, C. (2025).</strong> <em>DataAudit: Data audit and multilevel reliability tools for jamovi</em> (Version 0.2.0) [jamovi module].</p>",
+                "<p><strong>Higton, C. (2025).</strong> <em>DataAudit: Data audit and multilevel reliability tools for jamovi</em> (Version 0.2.1) [jamovi module].</p>",
                 "<p><strong>Tabachnick, B. G., &amp; Fidell, L. S. (2019).</strong> <em>Using Multivariate Statistics</em> (7th ed.). Pearson.</p>",
                 "<p style=\"font-size:0.85em;color:#777\">See also: jamovi project (2025). <em>jamovi</em> (Version 2.x) [Computer Software]. Retrieved from https://www.jamovi.org</p>",
                 "</div>"
@@ -37,7 +37,7 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
             survey_flags <- .da_survey_response_flags(data, vars, audit$dictionary, opts$caseID)
             attention_flags <- .da_attention_check_flags(data, vars, audit$dictionary, opts$caseID)
             metadata <- .da_metadata_suggestions(audit$dictionary)
-            desc <- .da_descriptives(data, vars, audit$dictionary)
+            desc <- .da_descriptives(data, vars, audit$dictionary, opts$floorCeilingThreshold)
 
             if (opts$includeAuditScore)
                 .da_add_rows(self$results$auditScore, .da_audit_score(data, vars, audit$dictionary, missing, quality, outliers, range_flags, duplicates, metadata, opts))
@@ -1016,11 +1016,12 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
     do.call(rbind.data.frame, rows)
 }
 
-.da_descriptives <- function(data, vars, dictionary) {
+.da_descriptives <- function(data, vars, dictionary, floor_ceiling_threshold = 15) {
     keep <- dictionary$variable[dictionary$inferred %in% c("Continuous numeric", "Integer/count")]
     keep <- intersect(vars, keep)
     rows <- lapply(keep, function(v) {
         num <- .da_numeric_values(data[[v]])
+        floor_ceiling <- .da_floor_ceiling(num, floor_ceiling_threshold)
         data.frame(
             variable = v,
             n = length(num),
@@ -1032,12 +1033,60 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
             max = if (length(num) > 0L) max(num) else NA_real_,
             skewness = .da_skew(num),
             kurtosis = .da_kurtosis(num),
+            floorN = floor_ceiling$floorN,
+            floorPct = floor_ceiling$floorPct,
+            ceilingN = floor_ceiling$ceilingN,
+            ceilingPct = floor_ceiling$ceilingPct,
+            floorCeilingFlag = floor_ceiling$flag,
             stringsAsFactors = FALSE
         )
     })
     if (length(rows) == 0L)
-        return(data.frame(variable = character(), n = integer(), missing = integer(), mean = numeric(), sd = numeric(), median = numeric(), min = numeric(), max = numeric(), skewness = numeric(), kurtosis = numeric(), stringsAsFactors = FALSE))
+        return(data.frame(variable = character(), n = integer(), missing = integer(), mean = numeric(), sd = numeric(), median = numeric(), min = numeric(), max = numeric(), skewness = numeric(), kurtosis = numeric(), floorN = integer(), floorPct = numeric(), ceilingN = integer(), ceilingPct = numeric(), floorCeilingFlag = character(), stringsAsFactors = FALSE))
     do.call(rbind.data.frame, rows)
+}
+
+.da_floor_ceiling <- function(x, threshold = 15) {
+    x <- x[is.finite(x)]
+    threshold <- suppressWarnings(as.numeric(threshold)[1])
+    if (!is.finite(threshold))
+        threshold <- 15
+
+    if (length(x) == 0L) {
+        return(list(
+            floorN = 0L, floorPct = NA_real_, ceilingN = 0L,
+            ceilingPct = NA_real_, flag = "Insufficient data"
+        ))
+    }
+
+    observed_min <- min(x)
+    observed_max <- max(x)
+    floor_n <- sum(x == observed_min)
+    ceiling_n <- sum(x == observed_max)
+    floor_pct <- 100 * floor_n / length(x)
+    ceiling_pct <- 100 * ceiling_n / length(x)
+
+    if (observed_min == observed_max) {
+        flag <- "No variation (all values at one observed value)"
+    } else {
+        floor_effect <- floor_pct >= threshold
+        ceiling_effect <- ceiling_pct >= threshold
+        flag <- if (floor_effect && ceiling_effect) {
+            "Floor and ceiling effects"
+        } else if (floor_effect) {
+            "Floor effect"
+        } else if (ceiling_effect) {
+            "Ceiling effect"
+        } else {
+            "No effect at or above threshold"
+        }
+    }
+
+    list(
+        floorN = as.integer(floor_n), floorPct = floor_pct,
+        ceilingN = as.integer(ceiling_n), ceilingPct = ceiling_pct,
+        flag = flag
+    )
 }
 
 .da_frequencies <- function(data, vars, dictionary) {
@@ -1067,7 +1116,7 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
 
 # Raw-variable normality screening; this is intentionally framed as screening text.
 .da_normality <- function(data, vars, dictionary, opts) {
-    desc <- .da_descriptives(data, vars, dictionary)
+    desc <- .da_descriptives(data, vars, dictionary, opts$floorCeilingThreshold)
     if (nrow(desc) == 0L)
         return(data.frame(variable = character(), n = integer(), mean = numeric(), sd = numeric(), median = numeric(), skewness = numeric(), kurtosis = numeric(), w = numeric(), p = numeric(), flag = character(), stringsAsFactors = FALSE))
     rows <- lapply(seq_len(nrow(desc)), function(i) {

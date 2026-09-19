@@ -1,12 +1,12 @@
 ---
 title: DataAudit
 name: DataAudit
-version: 0.2.0
+version: 0.2.1
 jms: '1.0'
 authors:
   - Christian Higton
-maintainer: Christian Higton <maintainer@example.com>
-date: '2026-09-11'
+maintainer: Christian Higton <christian.higton@gmail.com>
+date: '2026-09-19'
 type: R
 description: >
   Teaching-friendly data audit, codebook, data-quality screening, and multilevel
@@ -30,7 +30,7 @@ analyses:
       Estimates reliability separately for within-person change and
       between-person differences using a two-level confirmatory factor model.
     category: analyses
-usesNative: true
+usesNative: false
 minApp: 1.0.8
 
 ...

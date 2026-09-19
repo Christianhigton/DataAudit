@@ -252,11 +252,12 @@ items:
       - { name: reason, title: Reason, type: text }
 
   - name: descriptives
-    title: Descriptives for Continuous and Integer Variables
+    title: Descriptives and Floor/Ceiling Effects
     type: Table
     visible: (includeDescriptives)
     clearWith:
       - vars
+      - floorCeilingThreshold
     columns:
       - { name: variable, title: Variable, type: text }
       - { name: n, title: n, type: integer }
@@ -268,6 +269,11 @@ items:
       - { name: max, title: Maximum, type: number }
       - { name: skewness, title: Skewness, type: number }
       - { name: kurtosis, title: Kurtosis, type: number }
+      - { name: floorN, title: Observed floor n, type: integer }
+      - { name: floorPct, title: Observed floor %, type: number }
+      - { name: ceilingN, title: Observed ceiling n, type: integer }
+      - { name: ceilingPct, title: Observed ceiling %, type: number }
+      - { name: floorCeilingFlag, title: Floor/ceiling interpretation, type: text }
 
   - name: frequencies
     title: Frequencies for Categorical Variables

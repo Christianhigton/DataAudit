@@ -46,6 +46,7 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
             vifSerious = 10,
             skewThreshold = 1,
             kurtosisThreshold = 2,
+            floorCeilingThreshold = 15,
             maxCaseRows = 50,
             graphMaxVars = 9,
             graphTopCategories = 12, ...) {
@@ -227,6 +228,12 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                 kurtosisThreshold,
                 min=0,
                 default=2)
+            private$..floorCeilingThreshold <- jmvcore::OptionNumber$new(
+                "floorCeilingThreshold",
+                floorCeilingThreshold,
+                min=0,
+                max=100,
+                default=15)
             private$..maxCaseRows <- jmvcore::OptionInteger$new(
                 "maxCaseRows",
                 maxCaseRows,
@@ -285,6 +292,7 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
             self$.addOption(private$..vifSerious)
             self$.addOption(private$..skewThreshold)
             self$.addOption(private$..kurtosisThreshold)
+            self$.addOption(private$..floorCeilingThreshold)
             self$.addOption(private$..maxCaseRows)
             self$.addOption(private$..graphMaxVars)
             self$.addOption(private$..graphTopCategories)
@@ -330,6 +338,7 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
         vifSerious = function() private$..vifSerious$value,
         skewThreshold = function() private$..skewThreshold$value,
         kurtosisThreshold = function() private$..kurtosisThreshold$value,
+        floorCeilingThreshold = function() private$..floorCeilingThreshold$value,
         maxCaseRows = function() private$..maxCaseRows$value,
         graphMaxVars = function() private$..graphMaxVars$value,
         graphTopCategories = function() private$..graphTopCategories$value),
@@ -374,6 +383,7 @@ dataAuditOptions <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
         ..vifSerious = NA,
         ..skewThreshold = NA,
         ..kurtosisThreshold = NA,
+        ..floorCeilingThreshold = NA,
         ..maxCaseRows = NA,
         ..graphMaxVars = NA,
         ..graphTopCategories = NA)
@@ -450,20 +460,20 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "includeAssumptions"),
                 columns=list(
                     list(
-                        `name`="domain", 
-                        `title`="Domain", 
+                        `name`="domain",
+                        `title`="Domain",
                         `type`="text"),
                     list(
-                        `name`="status", 
-                        `title`="Status", 
+                        `name`="status",
+                        `title`="Status",
                         `type`="text"),
                     list(
-                        `name`="evidence", 
-                        `title`="Evidence", 
+                        `name`="evidence",
+                        `title`="Evidence",
                         `type`="text"),
                     list(
-                        `name`="recommendedAction", 
-                        `title`="Recommended action", 
+                        `name`="recommendedAction",
+                        `title`="Recommended action",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -478,20 +488,20 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "predictors"),
                 columns=list(
                     list(
-                        `name`="step", 
-                        `title`="Step", 
+                        `name`="step",
+                        `title`="Step",
                         `type`="text"),
                     list(
-                        `name`="status", 
-                        `title`="Status", 
+                        `name`="status",
+                        `title`="Status",
                         `type`="text"),
                     list(
-                        `name`="check", 
-                        `title`="What was checked", 
+                        `name`="check",
+                        `title`="What was checked",
                         `type`="text"),
                     list(
-                        `name`="nextAction", 
-                        `title`="Next action", 
+                        `name`="nextAction",
+                        `title`="Next action",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -507,12 +517,12 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "highMissing"),
                 columns=list(
                     list(
-                        `name`="metric", 
-                        `title`="Metric", 
+                        `name`="metric",
+                        `title`="Metric",
                         `type`="text"),
                     list(
-                        `name`="value", 
-                        `title`="Value", 
+                        `name`="value",
+                        `title`="Value",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -525,32 +535,32 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "highMissing"),
                 columns=list(
                     list(
-                        `name`="variable", 
-                        `title`="Variable name", 
+                        `name`="variable",
+                        `title`="Variable name",
                         `type`="text"),
                     list(
-                        `name`="label", 
-                        `title`="Variable label", 
+                        `name`="label",
+                        `title`="Variable label",
                         `type`="text"),
                     list(
-                        `name`="inferred", 
-                        `title`="Inferred variable type", 
+                        `name`="inferred",
+                        `title`="Inferred variable type",
                         `type`="text"),
                     list(
-                        `name`="missing", 
-                        `title`="Missing", 
+                        `name`="missing",
+                        `title`="Missing",
                         `type`="integer"),
                     list(
-                        `name`="missingPct", 
-                        `title`="Missing %", 
+                        `name`="missingPct",
+                        `title`="Missing %",
                         `type`="number"),
                     list(
-                        `name`="unique", 
-                        `title`="Unique valid values", 
+                        `name`="unique",
+                        `title`="Unique valid values",
                         `type`="integer"),
                     list(
-                        `name`="recommendedAction", 
-                        `title`="Recommended action", 
+                        `name`="recommendedAction",
+                        `title`="Recommended action",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -563,40 +573,40 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "highMissing"),
                 columns=list(
                     list(
-                        `name`="variable", 
-                        `title`="Variable", 
+                        `name`="variable",
+                        `title`="Variable",
                         `type`="text"),
                     list(
-                        `name`="label", 
-                        `title`="Label", 
+                        `name`="label",
+                        `title`="Label",
                         `type`="text"),
                     list(
-                        `name`="type", 
-                        `title`="Type", 
+                        `name`="type",
+                        `title`="Type",
                         `type`="text"),
                     list(
-                        `name`="measure", 
-                        `title`="Measurement level", 
+                        `name`="measure",
+                        `title`="Measurement level",
                         `type`="text"),
                     list(
-                        `name`="missing", 
-                        `title`="Missing", 
+                        `name`="missing",
+                        `title`="Missing",
                         `type`="integer"),
                     list(
-                        `name`="missingPct", 
-                        `title`="Missing %", 
+                        `name`="missingPct",
+                        `title`="Missing %",
                         `type`="number"),
                     list(
-                        `name`="validRangeCategories", 
-                        `title`="Valid range/categories", 
+                        `name`="validRangeCategories",
+                        `title`="Valid range/categories",
                         `type`="text"),
                     list(
-                        `name`="warnings", 
-                        `title`="Warnings", 
+                        `name`="warnings",
+                        `title`="Warnings",
                         `type`="text"),
                     list(
-                        `name`="recommendedAction", 
-                        `title`="Recommended action", 
+                        `name`="recommendedAction",
+                        `title`="Recommended action",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -609,28 +619,28 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "highMissing"),
                 columns=list(
                     list(
-                        `name`="variable", 
-                        `title`="Variable", 
+                        `name`="variable",
+                        `title`="Variable",
                         `type`="text"),
                     list(
-                        `name`="valid", 
-                        `title`="Valid n", 
+                        `name`="valid",
+                        `title`="Valid n",
                         `type`="integer"),
                     list(
-                        `name`="missing", 
-                        `title`="Missing n", 
+                        `name`="missing",
+                        `title`="Missing n",
                         `type`="integer"),
                     list(
-                        `name`="missingPct", 
-                        `title`="Missing %", 
+                        `name`="missingPct",
+                        `title`="Missing %",
                         `type`="number"),
                     list(
-                        `name`="flag", 
-                        `title`="Missingness flag", 
+                        `name`="flag",
+                        `title`="Missingness flag",
                         `type`="text"),
                     list(
-                        `name`="recommendation", 
-                        `title`="Recommendation", 
+                        `name`="recommendation",
+                        `title`="Recommendation",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -643,20 +653,20 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "maxCaseRows"),
                 columns=list(
                     list(
-                        `name`="case", 
-                        `title`="Row number or case ID", 
+                        `name`="case",
+                        `title`="Row number or case ID",
                         `type`="text"),
                     list(
-                        `name`="missing", 
-                        `title`="Number of missing variables", 
+                        `name`="missing",
+                        `title`="Number of missing variables",
                         `type`="integer"),
                     list(
-                        `name`="missingPct", 
-                        `title`="Percentage missing", 
+                        `name`="missingPct",
+                        `title`="Percentage missing",
                         `type`="number"),
                     list(
-                        `name`="flag", 
-                        `title`="Flag", 
+                        `name`="flag",
+                        `title`="Flag",
                         `type`="text"))))
             self$add(jmvcore::Html$new(
                 options=options,
@@ -673,20 +683,20 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "maxCaseRows"),
                 columns=list(
                     list(
-                        `name`="pattern", 
-                        `title`="Missing variables pattern", 
+                        `name`="pattern",
+                        `title`="Missing variables pattern",
                         `type`="text"),
                     list(
-                        `name`="n", 
-                        `title`="Cases", 
+                        `name`="n",
+                        `title`="Cases",
                         `type`="integer"),
                     list(
-                        `name`="percent", 
-                        `title`="Percent of rows", 
+                        `name`="percent",
+                        `title`="Percent of rows",
                         `type`="number"),
                     list(
-                        `name`="rows", 
-                        `title`="Example row numbers", 
+                        `name`="rows",
+                        `title`="Example row numbers",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -732,24 +742,24 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "smallCategoryN"),
                 columns=list(
                     list(
-                        `name`="variable", 
-                        `title`="Variable", 
+                        `name`="variable",
+                        `title`="Variable",
                         `type`="text"),
                     list(
-                        `name`="issue", 
-                        `title`="Issue type", 
+                        `name`="issue",
+                        `title`="Issue type",
                         `type`="text"),
                     list(
-                        `name`="details", 
-                        `title`="Details", 
+                        `name`="details",
+                        `title`="Details",
                         `type`="text"),
                     list(
-                        `name`="severity", 
-                        `title`="Severity", 
+                        `name`="severity",
+                        `title`="Severity",
                         `type`="text"),
                     list(
-                        `name`="action", 
-                        `title`="Suggested action", 
+                        `name`="action",
+                        `title`="Suggested action",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -762,32 +772,32 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "caseID"),
                 columns=list(
                     list(
-                        `name`="variable", 
-                        `title`="Variable", 
+                        `name`="variable",
+                        `title`="Variable",
                         `type`="text"),
                     list(
-                        `name`="validRange", 
-                        `title`="Valid range / allowed values", 
+                        `name`="validRange",
+                        `title`="Valid range / allowed values",
                         `type`="text"),
                     list(
-                        `name`="observedRange", 
-                        `title`="Observed range in data", 
+                        `name`="observedRange",
+                        `title`="Observed range in data",
                         `type`="text"),
                     list(
-                        `name`="rows", 
-                        `title`="Row numbers / case IDs", 
+                        `name`="rows",
+                        `title`="Row numbers / case IDs",
                         `type`="text"),
                     list(
-                        `name`="outOfRangeValues", 
-                        `title`="Out-of-range values found", 
+                        `name`="outOfRangeValues",
+                        `title`="Out-of-range values found",
                         `type`="text"),
                     list(
-                        `name`="n", 
-                        `title`="Flagged n", 
+                        `name`="n",
+                        `title`="Flagged n",
                         `type`="integer"),
                     list(
-                        `name`="action", 
-                        `title`="Recommended action", 
+                        `name`="action",
+                        `title`="Recommended action",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -799,24 +809,24 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "caseID"),
                 columns=list(
                     list(
-                        `name`="issue", 
-                        `title`="Issue", 
+                        `name`="issue",
+                        `title`="Issue",
                         `type`="text"),
                     list(
-                        `name`="rows", 
-                        `title`="Row numbers / case IDs", 
+                        `name`="rows",
+                        `title`="Row numbers / case IDs",
                         `type`="text"),
                     list(
-                        `name`="n", 
-                        `title`="Count", 
+                        `name`="n",
+                        `title`="Count",
                         `type`="integer"),
                     list(
-                        `name`="details", 
-                        `title`="Details", 
+                        `name`="details",
+                        `title`="Details",
                         `type`="text"),
                     list(
-                        `name`="action", 
-                        `title`="Recommended action", 
+                        `name`="action",
+                        `title`="Recommended action",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -828,24 +838,24 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "caseID"),
                 columns=list(
                     list(
-                        `name`="row", 
-                        `title`="Row number / case ID", 
+                        `name`="row",
+                        `title`="Row number / case ID",
                         `type`="text"),
                     list(
-                        `name`="issue", 
-                        `title`="Issue", 
+                        `name`="issue",
+                        `title`="Issue",
                         `type`="text"),
                     list(
-                        `name`="variables", 
-                        `title`="Variables checked", 
+                        `name`="variables",
+                        `title`="Variables checked",
                         `type`="text"),
                     list(
-                        `name`="details", 
-                        `title`="Details", 
+                        `name`="details",
+                        `title`="Details",
                         `type`="text"),
                     list(
-                        `name`="action", 
-                        `title`="Recommended action", 
+                        `name`="action",
+                        `title`="Recommended action",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -857,24 +867,24 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "caseID"),
                 columns=list(
                     list(
-                        `name`="row", 
-                        `title`="Row number / case ID", 
+                        `name`="row",
+                        `title`="Row number / case ID",
                         `type`="text"),
                     list(
-                        `name`="issue", 
-                        `title`="Attention-check issue", 
+                        `name`="issue",
+                        `title`="Attention-check issue",
                         `type`="text"),
                     list(
-                        `name`="variables", 
-                        `title`="Variables checked", 
+                        `name`="variables",
+                        `title`="Variables checked",
                         `type`="text"),
                     list(
-                        `name`="details", 
-                        `title`="Details", 
+                        `name`="details",
+                        `title`="Details",
                         `type`="text"),
                     list(
-                        `name`="action", 
-                        `title`="Recommended action", 
+                        `name`="action",
+                        `title`="Recommended action",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -885,73 +895,94 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "vars"),
                 columns=list(
                     list(
-                        `name`="variable", 
-                        `title`="Variable", 
+                        `name`="variable",
+                        `title`="Variable",
                         `type`="text"),
                     list(
-                        `name`="currentMeasure", 
-                        `title`="Current measurement level", 
+                        `name`="currentMeasure",
+                        `title`="Current measurement level",
                         `type`="text"),
                     list(
-                        `name`="inferredType", 
-                        `title`="Inferred type", 
+                        `name`="inferredType",
+                        `title`="Inferred type",
                         `type`="text"),
                     list(
-                        `name`="suggestion", 
-                        `title`="Suggested repair", 
+                        `name`="suggestion",
+                        `title`="Suggested repair",
                         `type`="text"),
                     list(
-                        `name`="reason", 
-                        `title`="Reason", 
+                        `name`="reason",
+                        `title`="Reason",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
                 name="descriptives",
-                title="Descriptives for Continuous and Integer Variables",
+                title="Descriptives and Floor/Ceiling Effects",
                 visible="(includeDescriptives)",
                 clearWith=list(
-                    "vars"),
+                    "vars",
+                    "floorCeilingThreshold"),
                 columns=list(
                     list(
-                        `name`="variable", 
-                        `title`="Variable", 
+                        `name`="variable",
+                        `title`="Variable",
                         `type`="text"),
                     list(
-                        `name`="n", 
-                        `title`="n", 
+                        `name`="n",
+                        `title`="n",
                         `type`="integer"),
                     list(
-                        `name`="missing", 
-                        `title`="Missing n", 
+                        `name`="missing",
+                        `title`="Missing n",
                         `type`="integer"),
                     list(
-                        `name`="mean", 
-                        `title`="Mean", 
+                        `name`="mean",
+                        `title`="Mean",
                         `type`="number"),
                     list(
-                        `name`="sd", 
-                        `title`="SD", 
+                        `name`="sd",
+                        `title`="SD",
                         `type`="number"),
                     list(
-                        `name`="median", 
-                        `title`="Median", 
+                        `name`="median",
+                        `title`="Median",
                         `type`="number"),
                     list(
-                        `name`="min", 
-                        `title`="Minimum", 
+                        `name`="min",
+                        `title`="Minimum",
                         `type`="number"),
                     list(
-                        `name`="max", 
-                        `title`="Maximum", 
+                        `name`="max",
+                        `title`="Maximum",
                         `type`="number"),
                     list(
-                        `name`="skewness", 
-                        `title`="Skewness", 
+                        `name`="skewness",
+                        `title`="Skewness",
                         `type`="number"),
                     list(
-                        `name`="kurtosis", 
-                        `title`="Kurtosis", 
-                        `type`="number"))))
+                        `name`="kurtosis",
+                        `title`="Kurtosis",
+                        `type`="number"),
+                    list(
+                        `name`="floorN",
+                        `title`="Observed floor n",
+                        `type`="integer"),
+                    list(
+                        `name`="floorPct",
+                        `title`="Observed floor %",
+                        `type`="number"),
+                    list(
+                        `name`="ceilingN",
+                        `title`="Observed ceiling n",
+                        `type`="integer"),
+                    list(
+                        `name`="ceilingPct",
+                        `title`="Observed ceiling %",
+                        `type`="number"),
+                    list(
+                        `name`="floorCeilingFlag",
+                        `title`="Floor/ceiling interpretation",
+                        `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
                 name="frequencies",
@@ -961,24 +992,24 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "vars"),
                 columns=list(
                     list(
-                        `name`="variable", 
-                        `title`="Variable", 
+                        `name`="variable",
+                        `title`="Variable",
                         `type`="text"),
                     list(
-                        `name`="category", 
-                        `title`="Category", 
+                        `name`="category",
+                        `title`="Category",
                         `type`="text"),
                     list(
-                        `name`="n", 
-                        `title`="n", 
+                        `name`="n",
+                        `title`="n",
                         `type`="integer"),
                     list(
-                        `name`="validPct", 
-                        `title`="Valid %", 
+                        `name`="validPct",
+                        `title`="Valid %",
                         `type`="number"),
                     list(
-                        `name`="totalPct", 
-                        `title`="Total %", 
+                        `name`="totalPct",
+                        `title`="Total %",
                         `type`="number"))))
             self$add(jmvcore::Image$new(
                 options=options,
@@ -1082,45 +1113,45 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "kurtosisThreshold"),
                 columns=list(
                     list(
-                        `name`="variable", 
-                        `title`="Variable", 
+                        `name`="variable",
+                        `title`="Variable",
                         `type`="text"),
                     list(
-                        `name`="n", 
-                        `title`="n", 
+                        `name`="n",
+                        `title`="n",
                         `type`="integer"),
                     list(
-                        `name`="mean", 
-                        `title`="Mean", 
+                        `name`="mean",
+                        `title`="Mean",
                         `type`="number"),
                     list(
-                        `name`="sd", 
-                        `title`="SD", 
+                        `name`="sd",
+                        `title`="SD",
                         `type`="number"),
                     list(
-                        `name`="median", 
-                        `title`="Median", 
+                        `name`="median",
+                        `title`="Median",
                         `type`="number"),
                     list(
-                        `name`="skewness", 
-                        `title`="Skewness", 
+                        `name`="skewness",
+                        `title`="Skewness",
                         `type`="number"),
                     list(
-                        `name`="kurtosis", 
-                        `title`="Kurtosis", 
+                        `name`="kurtosis",
+                        `title`="Kurtosis",
                         `type`="number"),
                     list(
-                        `name`="w", 
-                        `title`="Shapiro-Wilk W", 
+                        `name`="w",
+                        `title`="Shapiro-Wilk W",
                         `type`="number"),
                     list(
-                        `name`="p", 
-                        `title`="Shapiro-Wilk p", 
-                        `type`="number", 
+                        `name`="p",
+                        `title`="Shapiro-Wilk p",
+                        `type`="number",
                         `format`="zto,pvalue"),
                     list(
-                        `name`="flag", 
-                        `title`="Normality flag", 
+                        `name`="flag",
+                        `title`="Normality flag",
                         `type`="text"))))
             self$add(jmvcore::Html$new(
                 options=options,
@@ -1139,32 +1170,32 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "caseID"),
                 columns=list(
                     list(
-                        `name`="variable", 
-                        `title`="Variable", 
+                        `name`="variable",
+                        `title`="Variable",
                         `type`="text"),
                     list(
-                        `name`="zOutliers", 
-                        `title`="z-score outliers", 
+                        `name`="zOutliers",
+                        `title`="z-score outliers",
                         `type`="integer"),
                     list(
-                        `name`="iqrOutliers", 
-                        `title`="IQR outliers", 
+                        `name`="iqrOutliers",
+                        `title`="IQR outliers",
                         `type`="integer"),
                     list(
-                        `name`="low", 
-                        `title`="Most extreme low value", 
+                        `name`="low",
+                        `title`="Most extreme low value",
                         `type`="number"),
                     list(
-                        `name`="high", 
-                        `title`="Most extreme high value", 
+                        `name`="high",
+                        `title`="Most extreme high value",
                         `type`="number"),
                     list(
-                        `name`="cases", 
-                        `title`="Potential outlier case IDs", 
+                        `name`="cases",
+                        `title`="Potential outlier case IDs",
                         `type`="text"),
                     list(
-                        `name`="flag", 
-                        `title`="Flag", 
+                        `name`="flag",
+                        `title`="Flag",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -1176,37 +1207,37 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "group"),
                 columns=list(
                     list(
-                        `name`="outcome", 
-                        `title`="Outcome variable", 
+                        `name`="outcome",
+                        `title`="Outcome variable",
                         `type`="text"),
                     list(
-                        `name`="group", 
-                        `title`="Grouping variable", 
+                        `name`="group",
+                        `title`="Grouping variable",
                         `type`="text"),
                     list(
-                        `name`="statistic", 
-                        `title`="Levene statistic", 
+                        `name`="statistic",
+                        `title`="Levene statistic",
                         `type`="number"),
                     list(
-                        `name`="df", 
-                        `title`="df", 
+                        `name`="df",
+                        `title`="df",
                         `type`="text"),
                     list(
-                        `name`="p", 
-                        `title`="p", 
-                        `type`="number", 
+                        `name`="p",
+                        `title`="p",
+                        `type`="number",
                         `format`="zto,pvalue"),
                     list(
-                        `name`="groupSDs", 
-                        `title`="Group standard deviations", 
+                        `name`="groupSDs",
+                        `title`="Group standard deviations",
                         `type`="text"),
                     list(
-                        `name`="varRatio", 
-                        `title`="Variance ratio", 
+                        `name`="varRatio",
+                        `title`="Variance ratio",
                         `type`="number"),
                     list(
-                        `name`="flag", 
-                        `title`="Flag", 
+                        `name`="flag",
+                        `title`="Flag",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -1218,28 +1249,28 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "predictors"),
                 columns=list(
                     list(
-                        `name`="outcome", 
-                        `title`="Outcome", 
+                        `name`="outcome",
+                        `title`="Outcome",
                         `type`="text"),
                     list(
-                        `name`="predictor", 
-                        `title`="Predictor", 
+                        `name`="predictor",
+                        `title`="Predictor",
                         `type`="text"),
                     list(
-                        `name`="pearson", 
-                        `title`="Pearson correlation", 
+                        `name`="pearson",
+                        `title`="Pearson correlation",
                         `type`="number"),
                     list(
-                        `name`="spearman", 
-                        `title`="Spearman correlation", 
+                        `name`="spearman",
+                        `title`="Spearman correlation",
                         `type`="number"),
                     list(
-                        `name`="n", 
-                        `title`="Pairwise n", 
+                        `name`="n",
+                        `title`="Pairwise n",
                         `type`="integer"),
                     list(
-                        `name`="flag", 
-                        `title`="Flag", 
+                        `name`="flag",
+                        `title`="Flag",
                         `type`="text"))))
             self$add(jmvcore::Table$new(
                 options=options,
@@ -1252,20 +1283,20 @@ dataAuditResults <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
                     "vifSerious"),
                 columns=list(
                     list(
-                        `name`="predictor", 
-                        `title`="Predictor", 
+                        `name`="predictor",
+                        `title`="Predictor",
                         `type`="text"),
                     list(
-                        `name`="vif", 
-                        `title`="VIF", 
+                        `name`="vif",
+                        `title`="VIF",
                         `type`="number"),
                     list(
-                        `name`="tolerance", 
-                        `title`="Tolerance", 
+                        `name`="tolerance",
+                        `title`="Tolerance",
                         `type`="number"),
                     list(
-                        `name`="flag", 
-                        `title`="Flag", 
+                        `name`="flag",
+                        `title`="Flag",
                         `type`="text"))))}))
 
 dataAuditBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
@@ -1291,9 +1322,9 @@ dataAuditBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 
 #' Data Audit and Codebook
 #'
-#' Produces a teaching-friendly data audit, codebook, missing-data report, 
+#' Produces a teaching-friendly data audit, codebook, missing-data report,
 #' data-quality flags, descriptives, and optional assumption screening.
-#' 
+#'
 #' @param data .
 #' @param vars .
 #' @param outcome .
@@ -1335,6 +1366,7 @@ dataAuditBase <- if (requireNamespace("jmvcore", quietly=TRUE)) R6::R6Class(
 #' @param vifSerious .
 #' @param skewThreshold .
 #' @param kurtosisThreshold .
+#' @param floorCeilingThreshold .
 #' @param maxCaseRows .
 #' @param graphMaxVars .
 #' @param graphTopCategories .
@@ -1425,6 +1457,7 @@ dataAudit <- function(
     vifSerious = 10,
     skewThreshold = 1,
     kurtosisThreshold = 2,
+    floorCeilingThreshold = 15,
     maxCaseRows = 50,
     graphMaxVars = 9,
     graphTopCategories = 12) {
@@ -1488,6 +1521,7 @@ dataAudit <- function(
         vifSerious = vifSerious,
         skewThreshold = skewThreshold,
         kurtosisThreshold = kurtosisThreshold,
+        floorCeilingThreshold = floorCeilingThreshold,
         maxCaseRows = maxCaseRows,
         graphMaxVars = graphMaxVars,
         graphTopCategories = graphTopCategories)

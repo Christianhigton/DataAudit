@@ -74,6 +74,7 @@ options:
     - { name: vifSerious, title: VIF serious threshold, type: Number, min: 1, default: 10 }
     - { name: skewThreshold, title: Skewness warning threshold, type: Number, min: 0, default: 1 }
     - { name: kurtosisThreshold, title: Kurtosis warning threshold, type: Number, min: 0, default: 2 }
+    - { name: floorCeilingThreshold, title: Floor/ceiling effect threshold (%), type: Number, min: 0, max: 100, default: 15 }
     - { name: maxCaseRows, title: Maximum missing-case rows to show, type: Integer, min: 1, default: 50 }
     - { name: graphMaxVars, title: Maximum variables per graph panel, type: Integer, min: 1, max: 24, default: 9 }
     - { name: graphTopCategories, title: Maximum categories per categorical graph, type: Integer, min: 2, max: 30, default: 12 }

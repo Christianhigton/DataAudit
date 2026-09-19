@@ -48,6 +48,7 @@ dataAudit(
   vifSerious = 10,
   skewThreshold = 1,
   kurtosisThreshold = 2,
+  floorCeilingThreshold = 15,
   maxCaseRows = 50,
   graphMaxVars = 9,
   graphTopCategories = 12
@@ -66,6 +67,7 @@ dataAudit(
 \item{screeningDesign}{Screening design label, typically \code{"ungrouped"} or \code{"grouped"}.}
 \item{normalityChecks, outlierChecks, homogeneityChecks, linearityChecks, multicollinearityChecks}{Logical switches controlling assumption-screening sections.}
 \item{highMissing, moderateMissing, smallCategoryN, zThreshold, iqrMultiplier, vifWarning, vifSerious, skewThreshold, kurtosisThreshold, maxCaseRows, graphMaxVars, graphTopCategories}{Editable screening thresholds and display limits.}
+\item{floorCeilingThreshold}{Percentage at the observed minimum or maximum at which a floor or ceiling effect is flagged.}
 }
 \value{
 A jamovi results object containing overview, traffic-light score, screening
@@ -81,7 +83,8 @@ flags common data-quality issues, and optionally screens missing-data
 patterns, applies Little's MCAR test to usable numeric variables, visualises
 missingness, and screens duplicate cases, out-of-range rules, survey response patterns,
 attention-check flags such as B-lining/straight-lining,
-normality, outliers, homogeneity of variance, linearity, and
+floor and ceiling effects at the observed endpoints, normality, outliers,
+homogeneity of variance, linearity, and
 multicollinearity. Optional graphs include missingness bars, numeric
 histograms with optional normal curves, violin plots, numeric boxplots,
 categorical bar charts, survey raincloud plots, and a numeric correlation

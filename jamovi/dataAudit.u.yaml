@@ -102,4 +102,5 @@ children:
       - { type: TextBox, name: vifSerious, format: number }
       - { type: TextBox, name: skewThreshold, format: number }
       - { type: TextBox, name: kurtosisThreshold, format: number }
+      - { type: TextBox, name: floorCeilingThreshold, format: number }
 ...
