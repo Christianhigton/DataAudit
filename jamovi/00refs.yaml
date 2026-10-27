@@ -3,7 +3,7 @@ refs:
         type: software
         author: Higton, C.
         year: 2025
-        title: 'DataAudit: Data audit and multilevel reliability tools for jamovi (Version 0.2.1)'
+        title: 'DataAudit: Data audit and multilevel reliability tools for jamovi (Version 0.2.2)'
         publisher: '[jamovi module]'
     tabachnick_fidell:
         type: book

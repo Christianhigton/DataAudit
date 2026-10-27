@@ -3,3 +3,4 @@
 ^\.Rbuildignore$
 ^build$
 ^.*\.jmo$
+^.*\.omv$

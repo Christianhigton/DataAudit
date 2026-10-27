@@ -5,7 +5,7 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
         .run = function() {
             self$results$moduleRefs$setContent(paste0(
                 "<div style=\"font-family:sans-serif;font-size:0.9em;color:#555;line-height:1.5\">",
-                "<p><strong>Higton, C. (2025).</strong> <em>DataAudit: Data audit and multilevel reliability tools for jamovi</em> (Version 0.2.1) [jamovi module].</p>",
+                "<p><strong>Higton, C. (2025).</strong> <em>DataAudit: Data audit and multilevel reliability tools for jamovi</em> (Version 0.2.2) [jamovi module].</p>",
                 "<p><strong>Tabachnick, B. G., &amp; Fidell, L. S. (2019).</strong> <em>Using Multivariate Statistics</em> (7th ed.). Pearson.</p>",
                 "<p style=\"font-size:0.85em;color:#777\">See also: jamovi project (2025). <em>jamovi</em> (Version 2.x) [Computer Software]. Retrieved from https://www.jamovi.org</p>",
                 "</div>"
@@ -249,6 +249,18 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
     if (inherits(x, c("Date", "POSIXct", "POSIXt")))
         return(list(type = "Date/time", flag = ""))
 
+    measure <- tolower(.da_measure(x))
+    if (measure == "id")
+        return(list(type = "ID variable", flag = "Declared ID variable"))
+
+    # Distinct decimal measurements are not identifiers, and a small number
+    # of observed decimal scores does not make a continuous task ordinal.
+    num <- .da_numeric_values(x)
+    numeric_like <- length(num) == n && n > 0L
+    integer_like <- numeric_like && all(abs(num - round(num)) < .Machine$double.eps^0.5)
+    if (numeric_like && !integer_like && measure == "continuous")
+        return(list(type = "Continuous numeric", flag = ""))
+
     char <- as.character(valid)
     parsed_dates <- tryCatch(
         suppressWarnings(as.Date(char)),
@@ -271,10 +283,6 @@ dataAuditClass <- if (requireNamespace("jmvcore", quietly = TRUE)) R6::R6Class(
 
     if (is.ordered(x))
         return(list(type = "Ordinal", flag = .da_metadata_flag(x, "ordinal")))
-
-    num <- .da_numeric_values(x)
-    numeric_like <- length(num) == n && n > 0L
-    integer_like <- numeric_like && all(abs(num - round(num)) < .Machine$double.eps^0.5)
 
     if (numeric_like) {
         rng <- range(num, na.rm = TRUE)

@@ -1,12 +1,12 @@
 ---
 title: DataAudit
 name: DataAudit
-version: 0.2.1
+version: 0.2.2
 jms: '1.0'
 authors:
   - Christian Higton
 maintainer: Christian Higton <christian.higton@gmail.com>
-date: '2026-09-19'
+date: '2026-10-27'
 type: R
 description: >
   Teaching-friendly data audit, codebook, data-quality screening, and multilevel
